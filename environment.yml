@@ -1,0 +1,25 @@
+name: mp-transformer
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch-cuda=11.8
+  - pytorch=2.0
+  - torchvision=0.15
+  - pytorch-lightning=1.9.3
+  - scikit-learn
+  - matplotlib
+  - pillow
+  - natsort
+  - black
+  - isort
+  # - flake8
+  - pylint
+  - pre-commit
+  - pip
+  - pip:
+      - torchgeometry
+      - wandb
+      - imageio[ffmpeg]

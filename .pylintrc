@@ -1,0 +1,9 @@
+[MASTER]
+persistent=yes
+ignored-modules=torch
+
+[MESSAGES CONTROL]
+disable=missing-module-docstring,consider-using-from-import
+
+[REPORTS]
+reports=yes
