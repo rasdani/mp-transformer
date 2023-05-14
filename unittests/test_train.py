@@ -16,7 +16,7 @@ class TestTrain(unittest.TestCase):
             "hidden_dim": 2,
             "batch_size": 2,
             "sequence_length": 2,
-            "N": 2,
+            "N": 4,
             "epochs": 2,
         }
         CONFIG.update(minimal_config)
