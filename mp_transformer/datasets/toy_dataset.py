@@ -16,11 +16,13 @@ TOY_DATA_PATH = "data/toy/train-set"
 
 
 def normalize_pose(pose):
+    """Radians to [0, 1]"""
     pose = 0.5 + (pose / (2 * np.pi))
     return pose
 
 
 def unnormalize_pose(pose):
+    """[0, 1] to radians"""
     pose = (pose - 0.5) * (2 * np.pi)
     return pose
 
@@ -33,35 +35,34 @@ class ToyDataset(Dataset):
         path=TOY_DATA_PATH,
         transform=True,
         return_segments=False,
-        sequence_length=5,
+        sequence_length=64,
         N=1000,
         sparsity=1,
+        return_images=False,
     ):
         super().__init__()
 
-        image_paths = [
-            os.path.join(path, "images/", f)
-            for f in os.listdir(os.path.join(path, "images"))
-        ]
-        # self.image_paths = natsorted(image_paths)[:N]
-        self.image_paths = natsorted(image_paths)
-        # Gets too sparse for fast motion
-        self.image_paths = self.image_paths[:N:sparsity]
+        if return_images:
+            image_paths = [
+                os.path.join(path, "images/", f)
+                for f in os.listdir(os.path.join(path, "images"))
+            ]
+            self.image_paths = natsorted(image_paths)
+            # Gets too sparse for fast motion
+            self.image_paths = self.image_paths[:N:sparsity]
 
-        # self.poses = np.load(os.path.join(path, "poses.npy"))
         self.poses = [
             np.load(os.path.join(path, f))
             for f in natsorted(os.listdir(path))
             if f.endswith(".npy")
         ]
-        # self.poses = np.load(os.path.join(path, "poses0.npy"))[:N]
-        # self.poses = np.load(os.path.join(path, "poses0.npy"))
         self.poses = np.concatenate(self.poses)  # concats dimensions if not list!
         self.poses = self.poses[:N:sparsity]
 
         self.transform = transform
         self.return_segments = return_segments
         self.sequence_length = sequence_length
+        self.return_images = return_images
 
         self.transforms = transforms.Compose(
             [
@@ -73,8 +74,8 @@ class ToyDataset(Dataset):
     def __len__(self):
         if self.return_segments:  # Adjust the length based on 'return_segments'
             return len(self.poses) // self.sequence_length
-        else:
-            return len(self.poses)
+
+        return len(self.poses)
 
     def __getitem__(self, idx):
         if self.return_segments:
@@ -87,15 +88,18 @@ class ToyDataset(Dataset):
         pose = self.poses[idx]
         pose = normalize_pose(pose)
         pose = torch.tensor(pose).to(torch.float32)
+        ret = {"pose": pose}
 
-        image_path = self.image_paths[idx]
-        image = Image.open(image_path).convert("L")
-        image = np.array(image)
+        if self.return_images:
+            image_path = self.image_paths[idx]
+            image = Image.open(image_path).convert("L")
+            image = np.array(image)
 
-        if self.transform:
-            image = self.transforms(image)
+            if self.transform:
+                image = self.transforms(image)
 
-        ret = {"image": image, "pose": pose}
+            ret["image"] = image
+
         return ret
 
     def _get_segment(self, idx):
@@ -108,23 +112,23 @@ class ToyDataset(Dataset):
         end_idx = start_idx + self.sequence_length
 
         for i in range(start_idx, end_idx):
-            pose = self.poses[i]
-            pose = normalize_pose(pose)
-            pose = torch.tensor(pose).to(torch.float32)
-
-            image_path = self.image_paths[i]
-            image = Image.open(image_path).convert("L")
-            image = np.array(image)
-
-            if self.transform:
-                image = self.transforms(image)
-
-            images.append(image)
+            item = self._get_single_item(i)
+            pose = item["pose"]
             poses.append(pose)
 
-        images = torch.stack(images)
+            if self.return_images:
+                image = item["image"]
+                if self.transform:
+                    image = self.transforms(image)
+
+                images.append(image)
+
         poses = torch.stack(poses)
         timestamps = torch.linspace(0, 1, self.sequence_length)
+        ret = {"poses": poses, "timestamps": timestamps}
 
-        ret = {"images": images, "poses": poses, "timestamps": timestamps}
+        if self.return_images:
+            images = torch.stack(images)
+            ret["images"] = images
+
         return ret

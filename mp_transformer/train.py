@@ -12,6 +12,8 @@ from mp_transformer.datasets import ToyDataset
 from mp_transformer.models import MovementPrimitiveTransformer
 from mp_transformer.utils import save_side_by_side_subsequences, save_side_by_side_video
 
+CUDA_AVAILABLE = torch.cuda.is_available()
+
 
 def setup(config):
     """Setup model, datasets, and dataloaders."""
@@ -77,13 +79,15 @@ def log_to_wandb(config, model, val_dataset):
 
 
 def main(config, no_log=False, debug=False):
+    """Initialize PyTorch Lightning Trainer and train the model."""
     model, train_dataloader, val_dataloader = setup(config)
+    gpus = 1 if CUDA_AVAILABLE else 0
     if no_log or debug:
         if debug:
             config["epochs"] = 1
         trainer = pl.Trainer(
             max_epochs=config["epochs"],
-            gpus=0,
+            gpus=gpus,
             logger=False,
             enable_checkpointing=False,
         )
@@ -93,7 +97,7 @@ def main(config, no_log=False, debug=False):
             max_epochs=config["epochs"],
             logger=wandb_logger,
             log_every_n_steps=1,
-            gpus=1,
+            gpus=gpus,
         )
 
     trainer.fit(

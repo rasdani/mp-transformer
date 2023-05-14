@@ -10,10 +10,10 @@ on:
       - '*'
 
 env:
-  CACHE_NUMBER: 0  # edit this to trigger new chaching
+  CACHE_NUMBER: 0  # edit this to trigger new chaching manually
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
