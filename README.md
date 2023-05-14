@@ -31,7 +31,7 @@ An example video of a reconstructed sequence can be found in `demo/example.mp4`.
 ### TODO:
 - [x] improve toy example
 - [x] overfit on toy data
-- [ ] think of more challenging validation set
+- [ ] add translation to toy example
 - [ ] Demo Jupyter-Notebook 
 - [ ] hook up Adafuse or VideoPose3D and train end-to-end
 - [ ] overfit on Walking subset of Human3.6M

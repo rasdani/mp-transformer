@@ -3,10 +3,10 @@ import argparse
 
 import pytorch_lightning as pl
 import torch
+import wandb
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 
-import wandb
 from mp_transformer.config import CONFIG
 from mp_transformer.datasets import ToyDataset
 from mp_transformer.models import MovementPrimitiveTransformer
@@ -83,7 +83,7 @@ def main(config, no_log=False, debug=False):
             config["epochs"] = 1
         trainer = pl.Trainer(
             max_epochs=config["epochs"],
-            gpus=1,
+            gpus=0,
             logger=False,
             enable_checkpointing=False,
         )
