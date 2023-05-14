@@ -1,8 +1,9 @@
 __pycache__
 .ipynb_checkpoints
 *.egg-info
-data/*
+data/toy/train-set/*
 !data/toy/train-set/poses*.npy
+data/toy/val-set/*
 !data/toy/val-set/poses*.npy
 lightning_logs
 chechpoints
