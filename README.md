@@ -1,7 +1,8 @@
 # Movement Primitive - Transformer
 
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) 
+![Tests](https://github.com/rasdani/actions/workflows/tests.yml/badge.svg)
 
 
 This transformer architecture maps a sequence of poses, i.e. frames of movement, to a
