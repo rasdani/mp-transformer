@@ -18,7 +18,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()  # PyTorch Lightning
+        # self.save_hyperparameters()  # PyTorch Lightning
 
         self.encoder = MovementPrimitiveEncoder(config)
         self.decoder = MovementPrimitiveDecoder(config)

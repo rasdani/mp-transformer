@@ -23,6 +23,7 @@ class MovementPrimitiveDecoder(pl.LightningModule):
 
     def __init__(self, config):
         super().__init__()
+        # self.save_hyperparameters()  # PyTorch Lightning
 
         self.pose_dim = config["pose_dim"]
         self.num_primitives = config["num_primitives"]

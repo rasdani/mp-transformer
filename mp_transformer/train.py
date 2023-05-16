@@ -17,7 +17,7 @@ CUDA_AVAILABLE = torch.cuda.is_available()
 
 
 def setup(config):
-    """Setup model, datasets, and dataloaders."""
+    """Setup model and datasets."""
     model = MovementPrimitiveTransformer(config)
     train_dataset = ToyDataset(
         return_segments=True,

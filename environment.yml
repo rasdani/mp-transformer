@@ -12,6 +12,7 @@ dependencies:
   - scikit-learn
   - matplotlib
   - pillow
+  - moviepy
   - natsort
   - black
   - isort

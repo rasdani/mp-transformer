@@ -33,7 +33,7 @@ An example video of a reconstructed sequence can be found in `demo/example.mp4`.
 - [x] improve toy example
 - [x] overfit on toy data
 - [ ] add translation to toy example
-- [ ] Demo Jupyter-Notebook 
+- [ ] ~~Demo Jupyter-Notebook~~ try W&B report instead 
 - [ ] hook up Adafuse or VideoPose3D and train end-to-end
 - [ ] overfit on Walking subset of Human3.6M
 - [ ] train properly on Human3.6M
