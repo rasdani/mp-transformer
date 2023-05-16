@@ -5,7 +5,7 @@
 #SBATCH --mem-per-cpu=8000
 #SBATCH --cpus-per-task=4
 #SBATCH --gpus=1
-#SBATCH --out=transformer.out
+#SBATCH --out=train.out
 #SBATCH --mail-user=$EMAIL
 #SBATCH --mail-type=END,FAIL
 

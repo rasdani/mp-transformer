@@ -235,9 +235,12 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         out = self.forward(poses, timestamps)
         return out["recons_sequence"]
 
-    def infer_subsequence(self, poses, timestamps, subseq_idx=0):
+    def infer_subsequence(self, poses, timestamps, subseq_idx=0, return_mask=False):
         """Returns a subsequence defined by a single movement primitive."""
         poses = poses.unsqueeze(0)
         timestamps = timestamps.unsqueeze(0)
         out = self.forward(poses, timestamps)
-        return out["recons_subseqs"][:, subseq_idx, ...]
+        ret = {"recons_subseq": out["recons_subseqs"][:, subseq_idx, ...]}
+        if return_mask:
+            ret["gaussian_mask"] = out["gaussian_masks"][:, subseq_idx, ...]
+        return ret

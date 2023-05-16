@@ -1,12 +1,13 @@
 """Setups and runs model training. Logging is disabled if --no-log flag is set."""
 import argparse
+import os
 
 import pytorch_lightning as pl
 import torch
-import wandb
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 
+import wandb
 from mp_transformer.config import CONFIG
 from mp_transformer.datasets import ToyDataset
 from mp_transformer.models import MovementPrimitiveTransformer
@@ -30,6 +31,48 @@ def setup(config):
         N=config["N"],
     )
 
+    return model, train_dataset, val_dataset
+
+
+def setup_wandb(config, model):
+    """Setup Weights & Biases logging."""
+    wandb_logger = WandbLogger(
+        project="mp-transformer",
+        name="MP-Transformer",
+    )
+    wandb_logger.watch(model)
+    wandb_logger.experiment.config.update(config)
+    os.makedirs("tmp", exist_ok=True)
+    return wandb_logger
+
+
+def log_to_wandb(config, model, val_dataset):
+    """Log results to Weights & Biases after training."""
+    torch.save(model.state_dict(), "tmp/transformer.pt")
+    wandb.save("tmp/transformer.pt")
+
+    # Save multiple reconstruction examples
+    for i, idx in enumerate([0, len(val_dataset) // 2, len(val_dataset) - 1]):
+        item = val_dataset[idx]
+        # Log comparison video of whole reconstructed sequence
+        save_side_by_side_video(item, model)
+        wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
+
+        # Log videos of movement primitive subsequences
+        save_side_by_side_subsequences(
+            item, model, num_subseqs=config["num_primitives"]
+        )
+        for j in range(config["num_primitives"]):
+            wandb.log(
+                {f"example{i + 1}_MP{j + 1}": wandb.Video(f"tmp/comp_vid{j}.mp4")}
+            )
+
+        wandb.log({f"example{i + 1}": wandb.Video("tmp/comp_strip.mp4")})
+
+
+def main(config, no_log=False, debug=False):
+    """Initialize PyTorch Lightning Trainer and train the model."""
+    model, train_dataset, val_dataset = setup(config)
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
@@ -42,45 +85,6 @@ def setup(config):
         drop_last=True,
         num_workers=4,
     )
-
-    return model, train_dataloader, val_dataloader
-
-
-def setup_wandb(config, model):
-    """Setup Weights & Biases logging."""
-    wandb_logger = WandbLogger(
-        project="mp-transformer",
-        name="MP-Transformer",
-    )
-    wandb_logger.watch(model)
-    wandb_logger.experiment.config.update(config)
-    return wandb_logger
-
-
-def log_to_wandb(config, model, val_dataset):
-    """Log results to Weights & Biases after training."""
-    torch.save(model.state_dict(), "tmp/transformer.pt")
-    wandb.save("tmp/transformer.pt")
-
-    # Save multiple reconstruction examples
-    for i, idx in enumerate([0, len(val_dataset) // 2, len(val_dataset) - 1]):
-        # Log comparison video of whole reconstructed sequence
-        save_side_by_side_video(val_dataset, model, dataset_idx=idx)
-        wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
-
-        # Log videos of movement primitive subsequences
-        save_side_by_side_subsequences(
-            val_dataset, model, num_subseqs=config["num_primitives"], dataset_idx=idx
-        )
-        for j in range(config["num_primitives"]):
-            wandb.log(
-                {f"example{i + 1}_MP{j + 1}": wandb.Video(f"tmp/comp_vid{j}.mp4")}
-            )
-
-
-def main(config, no_log=False, debug=False):
-    """Initialize PyTorch Lightning Trainer and train the model."""
-    model, train_dataloader, val_dataloader = setup(config)
     gpus = 1 if CUDA_AVAILABLE else 0
     if no_log or debug:
         if debug:
@@ -105,7 +109,7 @@ def main(config, no_log=False, debug=False):
     )
 
     if not no_log and not debug:
-        log_to_wandb(config, model, val_dataloader)
+        log_to_wandb(config, model, val_dataset)
 
 
 if __name__ == "__main__":
