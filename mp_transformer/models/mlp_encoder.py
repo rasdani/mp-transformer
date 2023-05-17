@@ -3,10 +3,10 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import wandb
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 
+import wandb
 from mp_transformer.datasets.toy_dataset import ToyDataset
 from mp_transformer.utils import render_side_by_side_images
 

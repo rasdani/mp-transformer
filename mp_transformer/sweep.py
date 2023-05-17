@@ -26,7 +26,7 @@ def main():
         num_workers=4,
     )
 
-    wandb_logger = setup_wandb(config, model)
+    wandb_logger = setup_wandb(model, run=run)
     trainer = pl.Trainer(
         max_epochs=config["epochs"],
         logger=wandb_logger,
@@ -40,4 +40,5 @@ def main():
 
 
 sweep_id = wandb.sweep(SWEEP_CONFIG, project="mp-transformer")
-wandb.agent(sweep_id, main, count=3)
+# wandb.agent(sweep_id, main, count=40)
+wandb.agent(sweep_id, main)

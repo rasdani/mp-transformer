@@ -178,14 +178,14 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             recons_subseqs=recons_subseqs,
         )
         self.log("train_loss", loss)
-        joint_maxs, _ = torch.max(recons_subseqs.view(-1, 3), dim=0)
-        joint_mins, _ = torch.min(recons_subseqs.view(-1, 3), dim=0)
-        self.log("joint0_max", torch.max(joint_maxs[0]))
-        self.log("joint0_min", torch.min(joint_mins[0]))
-        self.log("joint1_max", torch.max(joint_maxs[1]))
-        self.log("joint1_min", torch.min(joint_mins[1]))
-        self.log("joint2_max", torch.max(joint_maxs[2]))
-        self.log("joint2_min", torch.min(joint_mins[2]))
+        # joint_maxs, _ = torch.max(recons_subseqs.view(-1, 3), dim=0)
+        # joint_mins, _ = torch.min(recons_subseqs.view(-1, 3), dim=0)
+        # self.log("joint0_max", torch.max(joint_maxs[0]))
+        # self.log("joint0_min", torch.min(joint_mins[0]))
+        # self.log("joint1_max", torch.max(joint_maxs[1]))
+        # self.log("joint1_min", torch.min(joint_mins[1]))
+        # self.log("joint2_max", torch.max(joint_maxs[2]))
+        # self.log("joint2_min", torch.min(joint_mins[2]))
         return loss
 
     def validation_step(self, batch, _):

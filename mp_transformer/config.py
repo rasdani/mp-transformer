@@ -38,27 +38,26 @@ CONFIG = {
 # for hyperparameter tuning with wandb sweep
 SWEEP_CONFIG = {
     "method": "random",
-    "metric": {
-        "name": "val_loss",
-        "goal": "minimize"
-    },
+    "metric": {"name": "val_loss", "goal": "minimize"},
     "parameters": {
         "pose_dim": {"values": [3]},
         "num_attention_heads": {"values": [4]},
         "num_transformer_layers": {"values": [4]},
         "latent_dim": {"values": [16, 32, 64]},
-        "num_primitives": {"values": [4, 8, 16, 32]},
-        "hidden_dim": {"values": [256]},
+        "num_primitives": {"values": [2, 4, 6, 8]},
+        "hidden_dim": {"values": [64, 128, 256]},
         "learn_segmentation": {"values": [True]},
-        "masking_slope": {"values": [1]},
-        "kl_weight": {"min": 0, "max": 1},
-        "mask_weight": {"min": 0, "max": 1},
-        "pose_weight": {"min": 0, "max": 1},
-        "segmentation_weight": {"min": 0, "max": 1},
-        "lr": {"min": 1e-4, "max": 1e-2},
+        "masking_slope": {"min": 0.0, "max": 1.0},
+        "kl_weight": {"min": 0.0, "max": 1.0},
+        "mask_weight": {"min": 0.0, "max": 1.0},
+        # "pose_weight": {"min": 0.0, "max": 1.0},
+        "pose_weight": {"values": [1.0]},
+        "segmentation_weight": {"min": 0.0, "max": 1.0},
+        "lr": {"min": 1e-5, "max": 1e-2},
         "batch_size": {"values": [16, 32, 64, 128]},
         "sequence_length": {"values": [128]},
         "N": {"values": [20000]},
-        "epochs": {"value": 2}
-    }
+        "epochs": {"values": [100]},
+    },
+    "early_terminate": {"type": "hyperband", "min_iter": 10, "max_iter": 100},
 }

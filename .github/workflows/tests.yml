@@ -16,8 +16,10 @@ jobs:
   cache-env-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
 
+      - uses: actions/checkout@v2
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v2
         with:

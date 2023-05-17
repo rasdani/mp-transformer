@@ -34,14 +34,16 @@ def setup(config):
     return model, train_dataset, val_dataset
 
 
-def setup_wandb(config, model):
+def setup_wandb(model, config=None, run=None):
     """Setup Weights & Biases logging."""
     wandb_logger = WandbLogger(
         project="mp-transformer",
         name="MP-Transformer",
+        experiment=run,
     )
     wandb_logger.watch(model)
-    wandb_logger.experiment.config.update(config)
+    if config is not None:
+        wandb_logger.experiment.config.update(config)
     os.makedirs("tmp", exist_ok=True)
     return wandb_logger
 
@@ -96,7 +98,7 @@ def main(config, no_log=False, debug=False):
             enable_checkpointing=False,
         )
     else:
-        wandb_logger = setup_wandb(config, model)
+        wandb_logger = setup_wandb(model, config=config)
         trainer = pl.Trainer(
             max_epochs=config["epochs"],
             logger=wandb_logger,

@@ -15,4 +15,3 @@ source $CONDA_ROOT/bin/activate
 conda activate $HOME/mambaforge/envs/mp-transformer
 
 python mp_transformer/train.py
-
