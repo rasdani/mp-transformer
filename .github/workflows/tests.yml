@@ -16,9 +16,6 @@ jobs:
   cache-env-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
-
       - uses: actions/checkout@v2
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v2
@@ -38,6 +35,9 @@ jobs:
       - name: Update environment
         run: mamba env update -n mp-transformer -f environment.yml
         if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Run tests
         shell: bash -l {0} # login shell due to conda env

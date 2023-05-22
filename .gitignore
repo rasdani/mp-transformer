@@ -5,6 +5,7 @@ data/toy/train-set/*
 !data/toy/train-set/poses*.npy
 data/toy/val-set/*
 !data/toy/val-set/poses*.npy
+# hpc/*
 lightning_logs
 chechpoints
 wandb

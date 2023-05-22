@@ -36,7 +36,7 @@ class ToyDataset(Dataset):
         transform=True,
         return_segments=False,
         sequence_length=64,
-        N=1000,
+        N=40000,
         sparsity=1,
         return_images=False,
     ):

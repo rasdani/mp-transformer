@@ -18,17 +18,18 @@ CUDA_AVAILABLE = torch.cuda.is_available()
 
 def setup(config):
     """Setup model and datasets."""
+    # breakpoint()
     model = MovementPrimitiveTransformer(config)
     train_dataset = ToyDataset(
         return_segments=True,
         sequence_length=config["sequence_length"],
-        N=config["N"],
+        N=config["N_train"],
     )
     val_dataset = ToyDataset(
         path="data/toy/val-set/",
         return_segments=True,
         sequence_length=config["sequence_length"],
-        N=config["N"],
+        N=config["N_val"],
     )
 
     return model, train_dataset, val_dataset

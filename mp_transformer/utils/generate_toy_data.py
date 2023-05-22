@@ -23,17 +23,25 @@ BONE_LENGTHS = [6.86943196, 7.83778524, 9.5505643]
 #     return bone_lengths, key_marker_width
 
 
-def generate_gaussian_process_poses(N, bone_lengths):
+def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
     """Uses gaussian processes to animate the limb with movements of two speeds."""
+
     print(f"Drawing {N} samples, might take a while...")
-    # rbf = gaussian_process.kernels.RBF(length_scale=0.25)
-    rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
-    # rbf_slow = gaussian_process.kernels.RBF(length_scale=0.6)
-    rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
+
+    if train_or_val == "train":
+        rbf = gaussian_process.kernels.RBF(length_scale=0.25)
+        rbf_slow = gaussian_process.kernels.RBF(length_scale=0.6)
+    elif train_or_val == "val":
+        rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
+        rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
+    else:
+        raise ValueError(f"train_or_val must be 'train' or 'val' in Gaussian Process.")
+
     GP = gaussian_process.GaussianProcessRegressor(kernel=rbf)
     GP_slow = gaussian_process.GaussianProcessRegressor(kernel=rbf_slow)
 
     t = np.linspace(0, 120, N)
+    # TODO: hardcode if I end up using only 3 joints
     y = np.empty((N, len(bone_lengths)))
 
     y[:, 0] = GP_slow.sample_y(t[:, None], random_state=None)[:, 0] * 3
@@ -161,8 +169,11 @@ def _generate(iteration=0, N=5000, train_or_val="train", gen_images=True):
     poses_file = f"data/toy/{train_or_val}-set/poses{iteration}.npy"
 
     if not os.path.exists(poses_file):
-        poses = generate_gaussian_process_poses(N, bone_lengths)
+        poses = generate_gaussian_process_poses(
+            N, bone_lengths=bone_lengths, train_or_val=train_or_val
+        )
         np.save(poses_file, poses)
+        print(f"{poses_file} written")
     else:
         print(f"{poses_file} already exists.")
         poses = np.load(poses_file)
@@ -187,18 +198,19 @@ def _generate(iteration=0, N=5000, train_or_val="train", gen_images=True):
 
 
 def main(iterations=1, train_or_val="train", gen_images=True):
-    if train_or_val == "both":
-        print("Generating both train and val sets")
-        for option in ["train", "val"]:
-            for i in range(iterations):
-                _generate(iteration=i, train_or_val=option, gen_images=gen_images)
-    else:
-        print(f"Generating {train_or_val} set")
+    options = ["train", "val"] if train_or_val == "both" else [train_or_val]
+    for option in options:
         for i in range(iterations):
-            _generate(iteration=i, train_or_val=train_or_val, gen_images=gen_images)
+            _generate(iteration=i, train_or_val=option, gen_images=gen_images)
 
 
 if __name__ == "__main__":
+    # TODO: hardcode the setting you end up with in the end
     GEN_IMAGES = False  # Learning and reconstructing only poses at the moment
     ITERATIONS = 4  # Run muliple times on smaller N and concatenate
-    main(iterations=ITERATIONS, train_or_val="both", gen_images=GEN_IMAGES)
+    # ITERATIONS = 16
+    # ITERATIONS = 20
+    # TRAIN_OR_VAL = "both"
+    # TRAIN_OR_VAL = "train"
+    TRAIN_OR_VAL = "val"
+    main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES)

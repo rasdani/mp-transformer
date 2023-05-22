@@ -25,9 +25,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
         self.num_primitives = self.encoder.num_primitives
         self.kl_weight = config["kl_weight"]
-        self.mask_weight = config["mask_weight"]
-        self.pose_weight = config["pose_weight"]
-        self.segmentation_weight = config["segmentation_weight"]
+        self.durations_weight = config["durations_weight"]
         self.lr = config["lr"]  # learning rate
 
     def forward(self, poses, timestamps):
@@ -83,7 +81,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def pose_loss(self, gt, recons_sequence):
         """Global pose reconstruction loss."""
-        return F.mse_loss(gt, recons_sequence) * self.pose_weight
+        return F.mse_loss(gt, recons_sequence)
 
     def align_ground_truth(self, gt, rigid_transformation, gaussian_masks):
         """So ground truth can be compared with single subsequences."""
@@ -106,7 +104,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         masked_and_summed = torch.sum(
             (recons_subseqs - aligned_gt) ** 2 * repeated_mask, dim=1
         )
-        return torch.mean(masked_and_summed) * self.segmentation_weight
+        return torch.mean(masked_and_summed)
 
     def kl_loss(self, means, logvars):
         """KL divergence between the latent primitives and a normal distribution."""
@@ -115,7 +113,10 @@ class MovementPrimitiveTransformer(pl.LightningModule):
     def durations_loss(self, cumsum_and_durations):
         """Penalizes deviating from equal length segments too much."""
         durations = cumsum_and_durations[..., 1]
-        return torch.mean((durations - 1 / self.num_primitives) ** 2) * self.mask_weight
+        return (
+            torch.mean((durations - 1 / self.num_primitives) ** 2)
+            * self.durations_weight
+        )
 
     def loss(
         self,

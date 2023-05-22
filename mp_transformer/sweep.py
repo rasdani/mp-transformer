@@ -1,6 +1,5 @@
 """Hyperparameter optimization with wandb sweep."""
 import pytorch_lightning as pl
-# from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 
 import wandb
