@@ -18,7 +18,6 @@ CUDA_AVAILABLE = torch.cuda.is_available()
 
 def setup(config):
     """Setup model and datasets."""
-    # breakpoint()
     model = MovementPrimitiveTransformer(config)
     train_dataset = ToyDataset(
         return_segments=True,
@@ -59,16 +58,16 @@ def log_to_wandb(config, model, val_dataset):
         item = val_dataset[idx]
         # Log comparison video of whole reconstructed sequence
         save_side_by_side_video(item, model)
-        wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
+        # wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
 
         # Log videos of movement primitive subsequences
         save_side_by_side_subsequences(
             item, model, num_subseqs=config["num_primitives"]
         )
-        for j in range(config["num_primitives"]):
-            wandb.log(
-                {f"example{i + 1}_MP{j + 1}": wandb.Video(f"tmp/comp_vid{j}.mp4")}
-            )
+        # for j in range(config["num_primitives"]):
+        #     wandb.log(
+        #         {f"example{i + 1}_MP{j + 1}": wandb.Video(f"tmp/comp_vid{j}.mp4")}
+        #     )
 
         wandb.log({f"example{i + 1}": wandb.Video("tmp/comp_strip.mp4")})
 
