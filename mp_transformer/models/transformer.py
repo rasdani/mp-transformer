@@ -25,6 +25,9 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
         self.num_primitives = self.encoder.num_primitives
         self.kl_weight = config["kl_weight"]
+        self.current_kl_weight = 0.0
+        self.anneal_start = config["anneal_start"]
+        self.anneal_end = config["anneal_end"]
         self.durations_weight = config["durations_weight"]
         self.lr = config["lr"]  # learning rate
 
@@ -108,7 +111,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def kl_loss(self, means, logvars):
         """KL divergence between the latent primitives and a normal distribution."""
-        return self.kl_divergence(means, logvars) * self.kl_weight
+        return self.kl_divergence(means, logvars) * self.current_kl_weight
 
     def durations_loss(self, cumsum_and_durations):
         """Penalizes deviating from equal length segments too much."""
@@ -118,7 +121,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             * self.durations_weight
         )
 
-    def loss(
+    def train_loss(
         self,
         gt,
         recons_sequence,
@@ -144,6 +147,10 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.log("l_durations", l_durations)
         return loss
 
+    def val_loss(self, gt, recons_sequence):
+        """Validation loss is just global pose reconstruction loss."""
+        return self.pose_loss(gt, recons_sequence)
+
     def training_step(self, batch, _):
         "Pytorch Lightning training step."
         poses, timestamps = (
@@ -168,7 +175,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             out["cumsum_and_durations"],
             out["recons_subseqs"],
         )
-        loss = self.loss(
+        loss = self.train_loss(
             gt=poses,
             recons_sequence=recons_sequence,
             rigid_transformation=rigid_transformation,
@@ -189,6 +196,16 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         # self.log("joint2_min", torch.min(joint_mins[2]))
         return loss
 
+    def on_train_epoch_end(self):
+        """KL annealing with PyTorch Lightning."""
+        if self.current_epoch >= self.anneal_start:  # start annealing
+            if self.current_epoch >= self.anneal_end:  # finish annealing
+                self.current_kl_weight = self.kl_weight
+            else:  # anneal
+                period = self.anneal_end - self.anneal_start
+                rate = (self.current_epoch - self.anneal_start) / period
+                self.current_kl_weight = rate * self.kl_weight
+
     def validation_step(self, batch, _):
         "Pytorch Lightning validation step."
         poses, timestamps = (
@@ -196,6 +213,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             batch["timestamps"],
         )
         out = self.forward(poses, timestamps)
+        # TODO: simplify when you settle on val_loss
         (
             recons_sequence,
             rigid_transformation,
@@ -213,16 +231,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             out["cumsum_and_durations"],
             out["recons_subseqs"],
         )
-        loss = self.loss(
-            gt=poses,
-            recons_sequence=recons_sequence,
-            rigid_transformation=rigid_transformation,
-            gaussian_masks=gaussian_masks,
-            mus=mus,
-            logvars=logvars,
-            cumsum_and_durations=cumsum_and_durations,
-            recons_subseqs=recons_subseqs,
-        )
+        loss = self.val_loss(gt=poses, recons_sequence=recons_sequence)
         self.log("val_loss", loss)
         return loss
 

@@ -39,7 +39,7 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Set FFMPEG Environment Variable
+      - name: Set ffmpeg Environment Variable # point imageio to ffmpeg
         run: echo "IMAGEIO_FFMPEG_EXE=$(which ffmpeg)" >> $GITHUB_ENV
 
       - name: Run tests

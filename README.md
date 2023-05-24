@@ -5,7 +5,7 @@
 ![Tests](https://github.com/rasdani/mp-transformer/actions/workflows/tests.yml/badge.svg)
 
 
-This transformer architecture maps a sequence of poses, i.e. frames of movement, to a
+This transformer architecture maps a sequence of pose joint angles, i.e. frames of human movement, to a
 (smaller) sequence of latent primitives.
 These act as low-dimensional building blocks of movement and are encoded as distributions in latent space.
 It then samples from these like a VAE and feeds them to a sequence decoder.
