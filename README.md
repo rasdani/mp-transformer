@@ -19,7 +19,7 @@ After validating the transformer architecture on a toy limb a [SOTA](https://git
 Potential use cases are modeling Movement Primitives in our VR lab or in the wild.
 
 ## Setup
-Install with `mamba env create --file environment.yml` (tested with mamba and [mambaforge](https://github.com/conda-forge/miniforge#mambaforge), conda should work aswell albeit slow.)
+Install with `mamba env create --file environment.yml` (tested with mamba and [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) on Ubuntu 22.04., conda should work aswell albeit slow.)
 Make sure `ffmpeg` is installed on your system for rendering videos.
 
 Activate the environment with `mamba activate mp-transformer` and setup with `pip install -e .`.
@@ -33,7 +33,7 @@ An example video of a reconstructed sequence can be found in `demo/example.mp4`.
 ### TODO:
 - [x] improve toy example
 - [x] overfit on toy data
-- [ ] add translation to toy example
+- [ ] add translational movement to toy example
 - [ ] ~~Demo Jupyter-Notebook~~ try W&B report
 - [ ] hook up Adafuse or VideoPose3D and train end-to-end
 - [ ] overfit on Walking subset of Human3.6M
