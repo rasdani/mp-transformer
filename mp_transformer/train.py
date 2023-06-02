@@ -36,9 +36,13 @@ def setup(config):
 
 def setup_wandb(model, config=None, run=None):
     """Setup Weights & Biases logging."""
+    if "run_name" in config.keys():
+        run_name = config["run_name"]
+    else:
+        run_name = "MP-Transformer"
     wandb_logger = WandbLogger(
         project="mp-transformer",
-        name="MP-Transformer",
+        name=run_name,
         experiment=run,
     )
     wandb_logger.watch(model)
@@ -74,6 +78,7 @@ def log_to_wandb(config, model, val_dataset):
 
 def main(config, no_log=False, debug=False):
     """Initialize PyTorch Lightning Trainer and train the model."""
+    run_name = config["run_name"]
     model, train_dataset, val_dataset = setup(config)
     train_dataloader = DataLoader(
         train_dataset,

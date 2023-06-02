@@ -203,7 +203,8 @@ class MovementPrimitiveDecoder(pl.LightningModule):
         time_diff = repeated_timestamps - repeated_durations_accum
 
         # zero out the past
-        warped_timestamps = nn.ReLU()(time_diff)  # TODO: readup on nn. vs F.
+        # warped_timestamps = nn.ReLU()(time_diff)  # TODO: readup on nn. vs F.
+        warped_timestamps = time_diff
 
         ## debug = torch.cat([repeated_timestamps, repeated_durations_accum, time_diff, warped_timestamps], dim=-1)
 

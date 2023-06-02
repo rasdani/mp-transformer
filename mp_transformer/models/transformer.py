@@ -30,6 +30,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.anneal_end = config["anneal_end"]
         self.durations_weight = config["durations_weight"]
         self.lr = config["lr"]  # learning rate
+        self.best_val_loss = float("inf")
 
     def forward(self, poses, timestamps):
         """Recieves a sequence of latent primitives from the encoder and feeds
@@ -111,6 +112,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def kl_loss(self, means, logvars):
         """KL divergence between the latent primitives and a normal distribution."""
+        self.log("kl_raw", self.kl_divergence(means, logvars))
         return self.kl_divergence(means, logvars) * self.current_kl_weight
 
     def durations_loss(self, cumsum_and_durations):
@@ -233,7 +235,15 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         )
         loss = self.val_loss(gt=poses, recons_sequence=recons_sequence)
         self.log("val_loss", loss)
+        if loss < self.best_val_loss and self.current_epoch > self.anneal_end:
+            self.best_val_loss = loss
         return loss
+
+    def on_train_end(self):
+        """Callback by PyTorch Lightning."""
+        # log directly to wandb because PyTorch Lightning complains
+        if self.logger is not None:
+            self.logger.experiment.log({"best_val_loss": self.best_val_loss})
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)
