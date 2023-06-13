@@ -9,6 +9,7 @@ data/toy/val-set/*
 lightning_logs
 chechpoints
 wandb
+artifacts
 mp-transformer
 tmp/*
 *.pt

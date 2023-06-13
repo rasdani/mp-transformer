@@ -5,13 +5,14 @@ import os
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 
 import wandb
 from mp_transformer.config import CONFIG
 from mp_transformer.datasets import ToyDataset
 from mp_transformer.models import MovementPrimitiveTransformer
-from mp_transformer.utils import save_side_by_side_subsequences, save_side_by_side_video
+from mp_transformer.utils import save_side_by_side_strip, save_side_by_side_video
 
 CUDA_AVAILABLE = torch.cuda.is_available()
 
@@ -36,7 +37,7 @@ def setup(config):
 
 def setup_wandb(model, config=None, run=None):
     """Setup Weights & Biases logging."""
-    if "run_name" in config.keys():
+    if "run_name" in config.keys(): # A run, not a sweep
         run_name = config["run_name"]
     else:
         run_name = "MP-Transformer"
@@ -44,6 +45,7 @@ def setup_wandb(model, config=None, run=None):
         project="mp-transformer",
         name=run_name,
         experiment=run,
+        log_model="best"
     )
     wandb_logger.watch(model)
     if config is not None:
@@ -54,8 +56,13 @@ def setup_wandb(model, config=None, run=None):
 
 def log_to_wandb(config, model, val_dataset):
     """Log results to Weights & Biases after training."""
-    torch.save(model.state_dict(), "tmp/transformer.pt")
-    wandb.save("tmp/transformer.pt")
+    # torch.save(model.state_dict(), "tmp/transformer.pt")
+    # wandb.save("tmp/transformer.pt")
+    # model_artifact = wandb.Artifact("model_state_dict", type="model")
+    # model_artifact.add_file("tmp/transformer.pt")
+    # model_artifact.link("model-registry/mp-transformer")
+    # wandb.log_artifact(model_artifact)
+    pass
 
     # Save multiple reconstruction examples
     for i, idx in enumerate([0, len(val_dataset) // 2, len(val_dataset) - 1]):
@@ -65,7 +72,7 @@ def log_to_wandb(config, model, val_dataset):
         # wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
 
         # Log videos of movement primitive subsequences
-        save_side_by_side_subsequences(
+        save_side_by_side_strip(
             item, model, num_subseqs=config["num_primitives"]
         )
         # for j in range(config["num_primitives"]):
@@ -78,7 +85,6 @@ def log_to_wandb(config, model, val_dataset):
 
 def main(config, no_log=False, debug=False):
     """Initialize PyTorch Lightning Trainer and train the model."""
-    run_name = config["run_name"]
     model, train_dataset, val_dataset = setup(config)
     train_dataloader = DataLoader(
         train_dataset,
@@ -104,9 +110,11 @@ def main(config, no_log=False, debug=False):
         )
     else:
         wandb_logger = setup_wandb(model, config=config)
+        checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
         trainer = pl.Trainer(
             max_epochs=config["epochs"],
             logger=wandb_logger,
+            callbacks=[checkpoint_callback],
             log_every_n_steps=1,
             gpus=gpus,
         )

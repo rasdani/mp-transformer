@@ -31,9 +31,10 @@ CONFIG = {
     "N_val": 40000,
     "sequence_length": 128,
     # "epochs": 250,
-    "epochs": 3000,
+    # "epochs": 3000,
     # "epochs": 500,
     # "epochs": 50,
+    "epochs": 1,
     "run_name": "fresh-Transformer",
 }
 
