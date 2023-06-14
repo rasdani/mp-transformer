@@ -114,9 +114,7 @@ def save_side_by_side_video(
     print(f"Video saved to {output_file}")
 
 
-def save_side_by_side_strip(
-    item, model, num_subseqs, fps=20
-):
+def save_side_by_side_strip(item, model, num_subseqs, fps=20):
     clips = [VideoFileClip("tmp/comp_vid.mp4")]
     for subseq_idx in range(num_subseqs):
         save_side_by_side_video(item, model, fps=fps, subseq_idx=subseq_idx)

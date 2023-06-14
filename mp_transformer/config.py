@@ -33,8 +33,8 @@ CONFIG = {
     # "epochs": 250,
     # "epochs": 3000,
     # "epochs": 500,
-    # "epochs": 50,
-    "epochs": 1,
+    "epochs": 60,
+    # "epochs": 1,
     "run_name": "fresh-Transformer",
 }
 

@@ -83,10 +83,12 @@ class MovementPrimitiveEncoder(pl.LightningModule):
         self.positional_encoding = PositionalEncodingLayer(config)
 
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=self.latent_dim, nhead=self.num_attention_heads
+            d_model=self.latent_dim,
+            nhead=self.num_attention_heads,
         )
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=self.latent_dim, nhead=self.num_attention_heads
+            d_model=self.latent_dim,
+            nhead=self.num_attention_heads,
         )
         self.encoder_segments = torch.nn.TransformerEncoder(
             encoder_layer=encoder_layer, num_layers=self.num_transformer_layers

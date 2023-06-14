@@ -216,23 +216,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         )
         out = self.forward(poses, timestamps)
         # TODO: simplify when you settle on val_loss
-        (
-            recons_sequence,
-            rigid_transformation,
-            gaussian_masks,
-            mus,
-            logvars,
-            cumsum_and_durations,
-            recons_subseqs,
-        ) = (
-            out["recons_sequence"],
-            out["rigid_transformation"],
-            out["gaussian_masks"],
-            out["mus"],
-            out["logvars"],
-            out["cumsum_and_durations"],
-            out["recons_subseqs"],
-        )
+        recons_sequence = out["recons_sequence"]
         loss = self.val_loss(gt=poses, recons_sequence=recons_sequence)
         self.log("val_loss", loss)
         if loss < self.best_val_loss and self.current_epoch > self.anneal_end:
