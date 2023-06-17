@@ -148,6 +148,8 @@ class MovementPrimitiveEncoder(pl.LightningModule):
         pose_embeddings = self.embedding(poses)
 
         # Add the positional encoding to the projections based on the input timestamps
+        print(f"{pose_embeddings.shape=}")
+        print(f"{self.positional_encoding(timestamps).shape=}")
         embeddings = pose_embeddings + self.positional_encoding(timestamps)
 
         # The PyTorch transformer expects the batch size on the second dimension, so transpose the tensor
