@@ -236,7 +236,6 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         """Reconstructs a sequence of poses."""
         poses = poses.unsqueeze(0)
         timestamps = timestamps.unsqueeze(0)
-        print(f"{timestamps=}")
         out = self.forward(poses, timestamps)
         return out["recons_sequence"]
 
