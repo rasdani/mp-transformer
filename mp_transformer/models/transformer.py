@@ -24,6 +24,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.decoder = MovementPrimitiveDecoder(config)
 
         self.num_primitives = self.encoder.num_primitives
+        self.sequence_length = config["sequence_length"]
         self.kl_weight = config["kl_weight"]
         self.current_kl_weight = 0.0
         self.anneal_start = config["anneal_start"]
@@ -248,3 +249,29 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         if return_mask:
             ret["gaussian_mask"] = out["gaussian_masks"][:, subseq_idx, ...]
         return ret
+
+    def generate(self):
+        """Generates a sequence of poses."""
+        random_latents = torch.randn(
+            1, self.latent_dim, self.sequence_length, device=self.device
+        )
+        dec_out = self.decoder(random_latents)
+        return dec_out["recons_sequence"]
+
+    def complete(self, poses, timestamps, from_idx, to_idx=-1):
+        """Completes a sequence of poses, filling in with random latents from from_idx to to_idx."""
+        poses = poses.unsqueeze(0)
+        timestamps = timestamps.unsqueeze(0)
+        enc_out = self.encoder(poses, timestamps)
+        gt_latents = enc_out["latent_primitives"]
+        random_latents = torch.rand_like(gt_latents)
+        latents = torch.cat(
+            [
+                gt_latents[:, :from_idx, :],
+                random_latents[:, from_idx:to_idx, :],
+                gt_latents[:, to_idx:, :],
+            ],
+            dim=1,
+        )
+        dec_out = self.decoder(timestamps, latent_primitives=latents)
+        return dec_out["recons_sequence"]

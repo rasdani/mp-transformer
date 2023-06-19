@@ -94,15 +94,36 @@ def render_side_by_side_sequence(item, model, subseq_idx=None):
     return side_by_side_sequence
 
 
+def render_side_by_side_completion(item, model, from_idx, to_idx=-1):
+    ys, timestamps = item["poses"], item["timestamps"]
+    ys_hat = model.complete(ys, timestamps, from_idx=from_idx, to_idx=to_idx)
+    ys = ys.detach().numpy()
+    ys_hat = ys_hat.squeeze(0).detach().numpy()  # Remove batch dimension
+    side_by_side_sequence = []
+    for y, y_hat in zip(ys, ys_hat):
+        y = unnormalize_pose(y)
+        y_hat = unnormalize_pose(y_hat)
+        img = render_side_by_side(y, y_hat)
+        side_by_side_sequence.append(img)
+    return side_by_side_sequence
+
+
 def save_side_by_side_video(
     item,
     model,
     fps=20,
     subseq_idx=None,
+    from_idx=None,
+    to_idx=-1,
 ):
-    side_by_side_sequence = render_side_by_side_sequence(
-        item, model, subseq_idx=subseq_idx
-    )
+    if from_idx is None:
+        side_by_side_sequence = render_side_by_side_sequence(
+            item, model, subseq_idx=subseq_idx
+        )
+    else:
+        side_by_side_sequence = render_side_by_side_completion(
+            item, model, from_idx, to_idx
+        )
 
     i = "" if subseq_idx is None else subseq_idx
     output_file = f"tmp/comp_vid{i}.mp4"
@@ -114,13 +135,22 @@ def save_side_by_side_video(
     print(f"Video saved to {output_file}")
 
 
-def save_side_by_side_strip(item, model, num_subseqs, fps=20):
+def save_side_by_side_strip(item, model, num_subseqs, fps=20, from_idx=None, to_idx=-1):
     # Whole sequence
-    save_side_by_side_video(item, model, fps=fps, subseq_idx=None)
+    save_side_by_side_video(
+        item, model, fps=fps, subseq_idx=None, from_idx=from_idx, to_idx=to_idx
+    )
     clips = [VideoFileClip("tmp/comp_vid.mp4")]
     # Subsequences
     for subseq_idx in range(num_subseqs):
-        save_side_by_side_video(item, model, fps=fps, subseq_idx=subseq_idx)
+        save_side_by_side_video(
+            item,
+            model,
+            fps=fps,
+            subseq_idx=subseq_idx,
+            from_idx=from_idx,
+            to_idx=to_idx,
+        )
         clip = VideoFileClip(f"tmp/comp_vid{subseq_idx}.mp4")
         clips.append(clip)
 
