@@ -56,28 +56,16 @@ def setup_wandb(model, config=None, run=None):
 
 def log_to_wandb(config, model, val_dataset, model_path):
     """Log results to Weights & Biases after training."""
-    # torch.save(model.state_dict(), "tmp/transformer.pt")
-    # wandb.save("tmp/transformer.pt")
     model_artifact = wandb.Artifact("model", type="model")
     model_artifact.add_file(model_path)
     # model_artifact.link("model-registry/mp-transformer")
     wandb.log_artifact(model_artifact)
-    # pass
 
     # Save multiple reconstruction examples
     for i, idx in enumerate([0, len(val_dataset) // 2, len(val_dataset) - 1]):
         item = val_dataset[idx]
-        # Log comparison video of whole reconstructed sequence
-        save_side_by_side_video(item, model)
-        # wandb.log({f"example{i + 1}_masked_average": wandb.Video("tmp/comp_vid.mp4")})
-
         # Log videos of movement primitive subsequences
         save_side_by_side_strip(item, model, num_subseqs=config["num_primitives"])
-        # for j in range(config["num_primitives"]):
-        #     wandb.log(
-        #         {f"example{i + 1}_MP{j + 1}": wandb.Video(f"tmp/comp_vid{j}.mp4")}
-        #     )
-
         wandb.log({f"example{i + 1}": wandb.Video("tmp/comp_strip.mp4")})
 
 
@@ -106,7 +94,7 @@ def main(config, no_log=False, debug=False):
             logger=False,
             enable_checkpointing=False,
         )
-    else:
+    else:  # Log normal training run
         wandb_logger = setup_wandb(model, config=config)
         checkpoint_callback = ModelCheckpoint(
             monitor="val_loss", save_top_k=1, filename="model"
