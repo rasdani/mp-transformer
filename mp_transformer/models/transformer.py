@@ -29,6 +29,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.current_kl_weight = 0.0
         self.anneal_start = config["anneal_start"]
         self.anneal_end = config["anneal_end"]
+        self.cycle_length = config["cycle_length"]
         self.durations_weight = config["durations_weight"]
         self.lr = config["lr"]  # learning rate
         self.best_val_loss = float("inf")
@@ -148,6 +149,9 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.log("l_pose_segmentation", l_pose_segments)
         self.log("kl_segments", kl_loss)
         self.log("l_durations", l_durations)
+        self.log("Diagnostics/min logvar", logvars.min())
+        self.log("Diagnostics/max logvar", logvars.max())
+        self.log("Diagnostics/median logvar", logvars.median())
         return loss
 
     def val_loss(self, gt, recons_sequence):
@@ -201,12 +205,16 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def on_train_epoch_end(self):
         """KL annealing with PyTorch Lightning."""
-        if self.current_epoch >= self.anneal_start:  # start annealing
-            if self.current_epoch >= self.anneal_end:  # finish annealing
+        epoch_in_cycle = self.current_epoch % self.cycle_length
+        # if self.current_epoch >= self.anneal_start:  # start annealing
+        if epoch_in_cycle >= self.anneal_start:  # start annealing
+            # if self.current_epoch >= self.anneal_end:  # finish annealing
+            if epoch_in_cycle >= self.anneal_end:  # finish annealing
                 self.current_kl_weight = self.kl_weight
             else:  # anneal
                 period = self.anneal_end - self.anneal_start
-                rate = (self.current_epoch - self.anneal_start) / period
+                # rate = (self.current_epoch - self.anneal_start) / period
+                rate = (epoch_in_cycle - self.anneal_start) / period
                 self.current_kl_weight = rate * self.kl_weight
 
     def validation_step(self, batch, _):
@@ -260,11 +268,27 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def complete(self, poses, timestamps, from_idx, to_idx=-1):
         """Completes a sequence of poses, filling in with random latents from from_idx to to_idx."""
+        to_idx = (
+            self.num_primitives if to_idx == -1 else to_idx
+        )  # no empty slices with relative indices
         poses = poses.unsqueeze(0)
+        print(f"poses range: [{poses.min()}, {poses.max()}]")
+        random_poses = torch.rand_like(poses)
         timestamps = timestamps.unsqueeze(0)
         enc_out = self.encoder(poses, timestamps)
         gt_latents = enc_out["latent_primitives"]
-        random_latents = torch.rand_like(gt_latents)
+        # mus, logvars = enc_out["mus"], enc_out["logvars"]
+        random_out = self.encoder(random_poses, timestamps)
+        mus, logvars = random_out["mus"], random_out["logvars"]
+        random_latents = self.encoder.reparameterize(mus, logvars)
+        print(f"mus range: [{mus.min()}, {mus.max()}]")
+        print(f"average mu: {mus.mean()}")
+        print(f"logvars range: [{logvars.min()}, {logvars.max()}]")
+        print(f"median logvar: {logvars.median()}")
+        print(f"gt_latents range: [{gt_latents.min()}, {gt_latents.max()}]")
+        print(f"average gt_latents: {gt_latents.mean()}")
+        print(f"random_latents range: [{random_latents.min()}, {random_latents.max()}]")
+        print(f"average random_latents: {random_latents.mean()}")
         latents = torch.cat(
             [
                 gt_latents[:, :from_idx, :],

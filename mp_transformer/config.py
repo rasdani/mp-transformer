@@ -19,6 +19,7 @@ CONFIG = {
     # "kl_weight": 1e-4,
     "anneal_start": 10,
     "anneal_end": 50,
+    "cycle_length": 1000,
     # "kl_weight": 1e-4,
     # "durations_weight": 1e-6,
     "durations_weight": 1e-4,
@@ -31,11 +32,12 @@ CONFIG = {
     "N_val": 40000,
     "sequence_length": 128,
     # "epochs": 250,
-    # "epochs": 3000,
+    "epochs": 3000,
     # "epochs": 500,
     # "epochs": 60,
-    "epochs": 1,
-    "run_name": "fresh-Transformer",
+    # "epochs": 1,
+    # "run_name": "fresh-Transformer",
+    "run_name": "cycle-Transformer",
 }
 
 # for hyperparameter tuning with wandb sweep
