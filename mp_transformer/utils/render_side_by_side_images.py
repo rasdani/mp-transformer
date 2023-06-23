@@ -115,6 +115,7 @@ def save_side_by_side_video(
     subseq_idx=None,
     from_idx=None,
     to_idx=-1,
+    path="tmp/comp_vid.mp4",
 ):
     if from_idx is None:
         side_by_side_sequence = render_side_by_side_sequence(
@@ -126,7 +127,7 @@ def save_side_by_side_video(
         )
 
     i = "" if subseq_idx is None else subseq_idx
-    output_file = f"tmp/comp_vid{i}.mp4"
+    output_file = f"{path[:-4]}{i}.mp4"
     with imageio.get_writer(output_file, fps=fps) as writer:
         for img in side_by_side_sequence:
             img_array = np.array(img)  # Convert PIL Image object to NumPy array

@@ -204,16 +204,17 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         return loss
 
     def on_train_epoch_end(self):
-        """KL annealing with PyTorch Lightning."""
-        epoch_in_cycle = self.current_epoch % self.cycle_length
-        # if self.current_epoch >= self.anneal_start:  # start annealing
+        """Cyclical KL annealing with PyTorch Lightning."""
+        epoch_in_cycle = (
+            self.current_epoch % self.cycle_length
+            if self.cycle_length
+            else self.current_epoch
+        )
         if epoch_in_cycle >= self.anneal_start:  # start annealing
-            # if self.current_epoch >= self.anneal_end:  # finish annealing
             if epoch_in_cycle >= self.anneal_end:  # finish annealing
                 self.current_kl_weight = self.kl_weight
             else:  # anneal
                 period = self.anneal_end - self.anneal_start
-                # rate = (self.current_epoch - self.anneal_start) / period
                 rate = (epoch_in_cycle - self.anneal_start) / period
                 self.current_kl_weight = rate * self.kl_weight
 

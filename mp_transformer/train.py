@@ -35,7 +35,7 @@ def setup(config):
     return model, train_dataset, val_dataset
 
 
-def setup_wandb(model, config=None, run=None):
+def setup_wandb(config=None, run=None):
     """Setup Weights & Biases logging."""
     if "run_name" in config.keys():  # A run, not a sweep
         run_name = config["run_name"]
@@ -47,7 +47,6 @@ def setup_wandb(model, config=None, run=None):
         name=run_name,
         experiment=run,
     )
-    wandb_logger.watch(model)
     if config is not None:
         wandb_logger.experiment.config.update(config)
     os.makedirs("tmp", exist_ok=True)
@@ -95,7 +94,7 @@ def main(config, no_log=False, debug=False):
             enable_checkpointing=False,
         )
     else:  # Log normal training run
-        wandb_logger = setup_wandb(model, config=config)
+        wandb_logger = setup_wandb(config=config)
         checkpoint_callback = ModelCheckpoint(
             monitor="val_loss", save_top_k=1, filename="model"
         )
