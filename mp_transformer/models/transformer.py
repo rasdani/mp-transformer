@@ -261,10 +261,12 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def generate(self):
         """Generates a sequence of poses."""
-        random_latents = torch.randn(
-            1, self.latent_dim, self.sequence_length, device=self.device
-        )
-        dec_out = self.decoder(random_latents)
+        random_poses = torch.rand((1, self.sequence_length, 3))
+        timestamps = torch.linspace(0, 1, self.sequence_length).unsqueeze(0)
+        random_out = self.encoder(random_poses, timestamps)
+        mus, logvars = random_out["mus"], random_out["logvars"]
+        random_latents = self.encoder.reparameterize(mus, logvars)
+        dec_out = self.decoder(timestamps, random_latents)
         return dec_out["recons_sequence"]
 
     def complete(self, poses, timestamps, from_idx, to_idx=-1):

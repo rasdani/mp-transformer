@@ -5,12 +5,12 @@ from moviepy.editor import VideoFileClip, clips_array
 from PIL import Image
 
 from mp_transformer.datasets.toy_dataset import unnormalize_pose
-from mp_transformer.utils.generate_toy_data import BONE_LENGTHS, render_image
+from mp_transformer.utils.generate_toy_data import render_image
 
 
-def render_side_by_side(gt_pose, pred_pose, bone_lengths=BONE_LENGTHS):
-    gt_image = render_image(gt_pose, bone_lengths)
-    pred_image = render_image(pred_pose, bone_lengths)
+def render_side_by_side(gt_pose, pred_pose):
+    gt_image = render_image(gt_pose)
+    pred_image = render_image(pred_pose)
 
     # Create a new PIL image with double width
     side_by_side = Image.new("RGB", (gt_image.width * 2, gt_image.height))
@@ -108,6 +108,17 @@ def render_side_by_side_completion(item, model, from_idx, to_idx=-1):
     return side_by_side_sequence
 
 
+def render_generation(model):
+    ys_hat = model.generate()
+    ys_hat = ys_hat.squeeze(0).detach().numpy()  # Remove batch dimension
+    imgs = []
+    for y_hat in ys_hat:
+        y_hat = unnormalize_pose(y_hat)
+        img = render_image(y_hat)
+        imgs.append(img)
+    return imgs
+
+
 def save_side_by_side_video(
     item,
     model,
@@ -157,3 +168,17 @@ def save_side_by_side_strip(item, model, num_subseqs, fps=20, from_idx=None, to_
 
     final_clip = clips_array([clips])  # stack horizontally
     final_clip.write_videofile("tmp/comp_strip.mp4")
+
+
+def save_generation_video(
+    model,
+    fps=20,
+    path="tmp/gen_vid.mp4",
+):
+    imgs = render_generation(model)
+    with imageio.get_writer(path, fps=fps) as writer:
+        for img in imgs:
+            img_array = np.array(img)  # Convert PIL Image object to NumPy array
+            writer.append_data(img_array)
+
+    print(f"Video saved to {path}")

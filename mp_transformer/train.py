@@ -12,7 +12,7 @@ import wandb
 from mp_transformer.config import CONFIG
 from mp_transformer.datasets import ToyDataset
 from mp_transformer.models import MovementPrimitiveTransformer
-from mp_transformer.utils import save_side_by_side_strip, save_side_by_side_video
+from mp_transformer.utils import save_generation_video, save_side_by_side_strip
 
 CUDA_AVAILABLE = torch.cuda.is_available()
 
@@ -66,6 +66,13 @@ def log_to_wandb(config, model, val_dataset, model_path):
         # Log videos of movement primitive subsequences
         save_side_by_side_strip(item, model, num_subseqs=config["num_primitives"])
         wandb.log({f"example{i + 1}": wandb.Video("tmp/comp_strip.mp4")})
+
+    # Save generated movement examples
+    for i in range(3):
+        save_generation_video(model, path=f"tmp/gen_vid{i}.mp4")
+        wandb.log(
+            {f"Generations/generation{i + 1}": wandb.Video(f"tmp/gen_vid{i}.mp4")}
+        )
 
 
 def main(config, no_log=False, debug=False):
