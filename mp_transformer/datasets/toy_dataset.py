@@ -14,16 +14,32 @@ PIL.PILLOW_VERSION = PIL.__version__  # torchvision bug
 
 TOY_DATA_PATH = "data/toy/train-set"
 
+global counter
+counter = 0
+
 
 def normalize_pose(pose):
     """Radians to [0, 1]"""
+    global counter
+    # print('before')
+    if not np.all(-np.pi <= pose) and np.all(pose <= np.pi):
+        print(pose, end="\n")
+        print(np.where(~(-np.pi <= pose)))
+        print(np.where(~(pose <= np.pi)))
+        counter += 1
+        print(counter)
     pose = 0.5 + (pose / (2 * np.pi))
+    # print('after')
+    # print(pose)
+    # assert np.all(0 <= pose) and np.all(pose <= 1)
     return pose
 
 
 def unnormalize_pose(pose):
     """[0, 1] to radians"""
+    assert np.all(0 <= pose) and np.all(pose <= 1)
     pose = (pose - 0.5) * (2 * np.pi)
+    assert np.all(-np.pi <= pose) and np.all(pose <= np.pi)
     return pose
 
 
@@ -56,6 +72,7 @@ class ToyDataset(Dataset):
             for f in natsorted(os.listdir(path))
             if f.endswith(".npy")
         ]
+        self.num_pose_files = len(self.poses)
         self.poses = np.concatenate(self.poses)  # concats dimensions if not list!
         self.poses = self.poses[:N:sparsity]
 
@@ -130,5 +147,12 @@ class ToyDataset(Dataset):
         if self.return_images:
             images = torch.stack(images)
             ret["images"] = images
+
+        # Check for sudden jumps in the values of the poses tensor
+        diff = poses[1:] - poses[:-1]
+        max_jump = None
+        # print(f"{diff.abs()=} at {idx=}")
+        # if torch.any(torch.abs(diff) > max_jump):
+        #     pass
 
         return ret

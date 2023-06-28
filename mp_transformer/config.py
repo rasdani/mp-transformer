@@ -19,7 +19,8 @@ CONFIG = {
     # "masking_slope": 0.75,
     # "masking_slope": 0.5,
     # "kl_weight": 1e-5,
-    "kl_weight": 1e-3,
+    "kl_weight": 1e-2,
+    # "kl_weight": 1e-3,
     # "kl_weight": 1e-4,
     "anneal_start": 10,
     "anneal_end": 50,
@@ -38,11 +39,12 @@ CONFIG = {
     "sequence_length": 128,
     # "epochs": 250,
     # "epochs": 3000,
-    # "epochs": 500,
+    "epochs": 500,
     # "epochs": 100,
-    "epochs": 1,
+    # "epochs": 1,
     # "run_name": "fresh-Transformer",
-    "run_name": "smol-Transformer",
+    # "run_name": "smol-Transformer",
+    "run_name": "resume-Transformer",
 }
 
 # for hyperparameter tuning with wandb sweep

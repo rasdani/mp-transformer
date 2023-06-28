@@ -46,6 +46,7 @@ class MovementPrimitiveDecoder(pl.LightningModule):
             nn.ReLU(),
             nn.LayerNorm(self.hidden_dim),
             nn.Linear(self.hidden_dim, self.pose_dim),
+            nn.Sigmoid(),
         )
 
         # Learns intermediate features from positionally encoded latent primitives
@@ -247,6 +248,8 @@ class MovementPrimitiveDecoder(pl.LightningModule):
         recons_sequence = self.masked_average(
             recons_subseqs, repeated_transfo, gaussian_masks
         )
+        print(f"{recons_sequence.max()=}")
+        print(f"{recons_sequence.min()=}")
 
         return {
             "recons_sequence": recons_sequence,

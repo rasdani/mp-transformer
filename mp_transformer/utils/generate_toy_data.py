@@ -23,8 +23,78 @@ BONE_LENGTHS = [6.86943196, 7.83778524, 9.5505643]
 #     return bone_lengths, key_marker_width
 
 
+# def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
+#     """Uses gaussian processes of two speeds to animate different parts of the limb."""
+
+#     print(f"Drawing {N} samples, might take a while...")
+
+#     if train_or_val == "train":
+#         rbf = gaussian_process.kernels.RBF(length_scale=0.25)
+#         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.6)
+#     elif train_or_val == "val":
+#         rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
+#         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
+#     else:
+#         raise ValueError(f"{train_or_val} must be 'train' or 'val' in Gaussian Process.")
+
+#     GP = gaussian_process.GaussianProcessRegressor(kernel=rbf)
+#     GP_slow = gaussian_process.GaussianProcessRegressor(kernel=rbf_slow)
+
+#     t = np.linspace(0, 120, N)
+#     # TODO: hardcode if I end up using only 3 joints
+#     y = np.empty((N, len(bone_lengths)))
+
+#     y[:, 0] = 3 * GP_slow.sample_y(t[:, None], random_state=None)[:, 0]
+
+#     y_samples = 0.7 * GP.sample_y(t[:, None], n_samples=len(bone_lengths) - 1, random_state=None).T
+#     y[:, 1:] = np.column_stack(y_samples)
+
+#     print("RAW")
+#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
+
+#     # Wrap angles between -pi and pi
+#     y = (y + np.pi) % (2 * np.pi) - np.pi
+#     print("FIRT WRAP")
+#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
+
+#     # Unwrap handles the case where the angle jumps from -pi to pi
+#     y = np.unwrap(y, axis=0)
+#     print("UNWRAP")
+#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
+
+
+#     # Wrap again since unwrapping can lead to values outside of [-pi, pi]
+#     y = (y + np.pi) % (2 * np.pi) - np.pi
+#     print("SECOND WRAP")
+#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
+
+#     # Check for discontinuities
+#     y_diff = np.diff(y, axis=0)
+#     print("DIFF")
+#     print(y_diff)
+#     print(f"y_diff.min() = {y_diff.min()}, y_diff.max() = {y_diff.max()}")
+
+#     max_jump = np.pi
+#     indices_of_jumps = np.where(np.abs(y_diff) > max_jump)
+#     print(f"indices_of_jumps = {indices_of_jumps}")
+
+#     # if np.any(abs(y_diff) > max_jump):
+#     #     raise ValueError("Detected a discontinuity in the pose sequence.")
+
+#     window_size = 2  # Adjust as needed
+
+#     for idx in indices_of_jumps[0]:
+#         print(f"Jump at index {idx} in column {indices_of_jumps[1][0]}:")
+#         print(f"Values before: {y[idx-window_size:idx+1]}")
+#         print(f"Values after: {y[idx+1:idx+window_size+1]}")
+#         print(f"Difference causing the jump: {y_diff[idx]}")
+#         print("---")
+
+#     return y
+
+
 def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
-    """Uses gaussian processes to animate the limb with movements of two speeds."""
+    """Uses gaussian processes of two speeds to animate different parts of the limb."""
 
     print(f"Drawing {N} samples, might take a while...")
 
@@ -35,58 +105,118 @@ def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
         rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
     else:
-        raise ValueError(f"train_or_val must be 'train' or 'val' in Gaussian Process.")
+        raise ValueError(
+            f"{train_or_val} must be 'train' or 'val' in Gaussian Process."
+        )
 
     GP = gaussian_process.GaussianProcessRegressor(kernel=rbf)
     GP_slow = gaussian_process.GaussianProcessRegressor(kernel=rbf_slow)
 
     t = np.linspace(0, 120, N)
-    # TODO: hardcode if I end up using only 3 joints
-    y = np.empty((N, len(bone_lengths)))
+    y = np.empty(
+        (N, len(bone_lengths) * 2)
+    )  # Multiply by 2 for sine and cosine representation
 
-    y[:, 0] = GP_slow.sample_y(t[:, None], random_state=None)[:, 0] * 3
+    # Generate the slow GP for the first joint
+    y_samples = 3 * GP_slow.sample_y(t[:, None], random_state=None)[:, 0]
+    y[:, 0:2] = np.column_stack([np.sin(y_samples), np.cos(y_samples)])
 
-    y_samples = (
-        GP.sample_y(t[:, None], n_samples=len(bone_lengths) - 1, random_state=None).T
-        * 0.7
-    )
-    y[:, 1:] = np.column_stack(y_samples)
+    # Generate the fast GP for the remaining joints
+    for i in range(1, len(bone_lengths)):
+        y_samples = (
+            0.7 * GP.sample_y(t[:, None], n_samples=1, random_state=None).T[0]
+        )  # Extract the 1D array
+        y[:, i * 2 : i * 2 + 2] = np.column_stack(
+            [np.sin(y_samples), np.cos(y_samples)]
+        )
 
-    idx = abs(y) > np.pi
-    y[idx] = y[idx] - 2 * np.sign(y[idx]) * np.pi
+    print("RAW")
+    print(f"y.min() = {y.min()}, y.max() = {y.max()}")
+
+    # Check for significant changes
+    y_diff = np.diff(y, axis=0)
+    print("DIFF")
+    print(y_diff)
+    print(f"y_diff.min() = {y_diff.min()}, y_diff.max() = {y_diff.max()}")
+
+    max_diff = 0.5  # Choose a suitable maximum difference
+    indices_of_large_diffs = np.where(np.abs(y_diff) > max_diff)
+    print(f"indices_of_large_diffs = {indices_of_large_diffs}")
+
+    # Display values around large diffs
+    window_size = 2  # Adjust as needed
+
+    for idx in indices_of_large_diffs[0]:
+        print(
+            f"Large difference at index {idx} in column {indices_of_large_diffs[1][0]}:"
+        )
+        print(f"Values before: {y[idx-window_size:idx+1]}")
+        print(f"Values after: {y[idx+1:idx+window_size+1]}")
+        print(f"Difference: {y_diff[idx]}")
+        print("---")
 
     return y
 
 
-def forward(angles, bone_lenghts=BONE_LENGTHS):
-    """forward
+# def forward(angles, bone_lenghts=BONE_LENGTHS):
+#     """forward
+#     Compute forward kinematics
+#     angles --> cartesian coordinates
+
+#     :param angles:
+#       List of angles for each bone_length in the hierarchy
+#       relative to its parent bone_length
+#     :param bone_lengths: List of bone_length lengths
+#     """
+#     bone_lengths = np.array(bone_lenghts)
+#     if bone_lengths is None:
+#         bone_lengths = np.ones_like(angles)
+#     elif len(bone_lengths) == 2:
+#         bone_lengths = bone_lengths * np.ones_like(angles)
+#     else:
+#         try:
+#             assert len(angles) == len(bone_lengths)
+#             # assert angles.shape == bone_lengths.shape
+#         except AssertionError as excp:
+#             raise Exception(
+#                 f"Number of angles and bone_lengths should be the same"
+#                 f" but: {len(angles)} is not {len(bone_lengths)}"
+#                 # f" but: {angles.shape} is not {bone_lengths.shape}"
+#             ) from excp
+
+#     coordinates = [(0, 0)]
+#     cumulative_angle = 0
+#     for angle, bone_length in zip(angles, bone_lengths):
+#         offs = coordinates[-1]
+#         cumulative_angle += angle
+#         coordinates += [
+#             (
+#                 bone_length * np.cos(cumulative_angle) + offs[0],
+#                 bone_length * np.sin(cumulative_angle) + offs[1],
+#             )
+#         ]
+#     return coordinates
+
+
+def forward(angles, bone_lengths=BONE_LENGTHS):
+    """
     Compute forward kinematics
     angles --> cartesian coordinates
 
     :param angles:
-      List of angles for each bone_length in the hierarchy
+      List of pairs of sine and cosine values for each bone_length in the hierarchy
       relative to its parent bone_length
     :param bone_lengths: List of bone_length lengths
     """
-    bone_lengths = np.array(bone_lenghts)
-    if bone_lengths is None:
-        bone_lengths = np.ones_like(angles)
-    elif len(bone_lengths) == 2:
-        bone_lengths = bone_lengths * np.ones_like(angles)
-    else:
-        try:
-            assert len(angles) == len(bone_lengths)
-            # assert angles.shape == bone_lengths.shape
-        except AssertionError as excp:
-            raise Exception(
-                f"Number of angles and bone_lengths should be the same"
-                f" but: {len(angles)} is not {len(bone_lengths)}"
-                # f" but: {angles.shape} is not {bone_lengths.shape}"
-            ) from excp
+    # print(f"angles = {angles}")
+    # print(f"bone_lengths = {bone_lengths}")
+    bone_lengths = np.array(bone_lengths)
 
     coordinates = [(0, 0)]
     cumulative_angle = 0
-    for angle, bone_length in zip(angles, bone_lengths):
+    for angle_sin_cos, bone_length in zip(angles, bone_lengths):
+        angle_sin, angle_cos = angle_sin_cos
+        angle = np.arctan2(angle_sin, angle_cos)
         offs = coordinates[-1]
         cumulative_angle += angle
         coordinates += [
@@ -143,7 +273,7 @@ def save_image(i, pose, bone_lengths, train_or_val):
     img = render_image(pose, bone_lengths)
     file_path = f"data/toy/{train_or_val}-set/images/{i:05d}.png"
     img.save(file_path)
-    print(f"{file_path} written")
+    # print(f"{file_path} written")
 
 
 def create_video(image_folder, output_video, fps=20):
@@ -169,6 +299,7 @@ def _generate(iteration=0, N=5000, train_or_val="train", gen_images=True):
     poses_file = f"data/toy/{train_or_val}-set/poses{iteration}.npy"
 
     if not os.path.exists(poses_file):
+        os.makedirs(f"data/toy/{train_or_val}-set", exist_ok=True)
         poses = generate_gaussian_process_poses(
             N, bone_lengths=bone_lengths, train_or_val=train_or_val
         )
@@ -181,14 +312,16 @@ def _generate(iteration=0, N=5000, train_or_val="train", gen_images=True):
     if gen_images:
         print(f"Generating images for {train_or_val} set")
         os.makedirs(f"data/toy/{train_or_val}-set/images", exist_ok=True)
+        print(f"poses before pool = {poses}")
         with Pool() as pool:
-            pool.starmap(
-                save_image,
-                [
-                    (i + iteration * N, pose, bone_lengths, train_or_val)
-                    for i, pose in enumerate(poses)
-                ],
-            )
+            # Generate list of arguments for save_image outside of starmap
+            idxs_and_poses = [
+                (i + iteration * N, pose.reshape(-1, 2)) for i, pose in enumerate(poses)
+            ]
+            save_image_args = [
+                (idx, pose, bone_lengths, train_or_val) for idx, pose in idxs_and_poses
+            ]
+            pool.starmap(save_image, save_image_args)
 
         print(f"Generating video for {train_or_val} set")
         create_video(
@@ -197,20 +330,24 @@ def _generate(iteration=0, N=5000, train_or_val="train", gen_images=True):
         )
 
 
-def main(iterations=1, train_or_val="train", gen_images=True):
+def main(iterations=1, train_or_val="train", gen_images=True, N=5000):
     options = ["train", "val"] if train_or_val == "both" else [train_or_val]
     for option in options:
         for i in range(iterations):
-            _generate(iteration=i, train_or_val=option, gen_images=gen_images)
+            _generate(iteration=i, train_or_val=option, gen_images=gen_images, N=N)
 
 
 if __name__ == "__main__":
     # TODO: hardcode the setting you end up with in the end
-    GEN_IMAGES = False  # Learning and reconstructing only poses at the moment
-    ITERATIONS = 4  # Run muliple times on smaller N and concatenate
+    N = 5000
+    # N = 1000
+    # N = 4000
+    GEN_IMAGES = True  # Learning and reconstructing only poses at the moment
+    # GEN_IMAGES = False  # Learning and reconstructing only poses at the moment
+    ITERATIONS = 1  # Run muliple times on smaller N and concatenate
     # ITERATIONS = 16
     # ITERATIONS = 20
     # TRAIN_OR_VAL = "both"
-    # TRAIN_OR_VAL = "train"
-    TRAIN_OR_VAL = "val"
-    main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES)
+    TRAIN_OR_VAL = "train"
+    # TRAIN_OR_VAL = "val"
+    main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES, N=N)

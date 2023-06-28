@@ -75,21 +75,23 @@ def log_to_wandb(config, model, val_dataset, model_path):
         )
 
 
-def main(config, no_log=False, debug=False):
+def main(config, no_log=False, debug=False, checkpoint_path=None):
     """Initialize PyTorch Lightning Trainer and train the model."""
     model, train_dataset, val_dataset = setup(config)
+    num_workers = 4 if not debug else 0
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
         drop_last=True,
-        num_workers=4,
+        num_workers=num_workers,
     )
-    val_dataloader = DataLoader(
-        val_dataset,
-        batch_size=config["batch_size"],
-        drop_last=True,
-        num_workers=4,
-    )
+    # val_dataloader = DataLoader(
+    #     val_dataset,
+    #     batch_size=config["batch_size"],
+    #     drop_last=True,
+    #     num_workers=num_workers,
+    # )
+    val_dataloader = train_dataloader
     gpus = 1 if CUDA_AVAILABLE else 0
     if no_log or debug:
         if debug:
@@ -112,6 +114,7 @@ def main(config, no_log=False, debug=False):
             callbacks=[checkpoint_callback],
             log_every_n_steps=1,
             gpus=gpus,
+            resume_from_checkpoint=checkpoint_path,
         )
 
     trainer.fit(
@@ -129,5 +132,6 @@ if __name__ == "__main__":
         "--debug", action="store_true", help="Disable logging for debugging"
     )
     parser.add_argument("--no-log", action="store_true", help="Disable logging")
+    parser.add_argument("--checkpoint", type=str, help="Path to checkpoint")
     args = parser.parse_args()
-    main(CONFIG, no_log=args.no_log, debug=args.debug)
+    main(CONFIG, no_log=args.no_log, debug=args.debug, checkpoint_path=args.checkpoint)

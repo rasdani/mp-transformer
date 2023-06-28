@@ -225,7 +225,6 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             batch["timestamps"],
         )
         out = self.forward(poses, timestamps)
-        # TODO: simplify when you settle on val_loss
         recons_sequence = out["recons_sequence"]
         loss = self.val_loss(gt=poses, recons_sequence=recons_sequence)
         self.log("val_loss", loss)
