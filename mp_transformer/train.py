@@ -115,6 +115,7 @@ def main(config, no_log=False, debug=False, checkpoint_path=None):
             log_every_n_steps=1,
             gpus=gpus,
             resume_from_checkpoint=checkpoint_path,
+            num_sanity_val_steps=0,
         )
 
     trainer.fit(

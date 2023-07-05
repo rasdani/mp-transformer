@@ -14,32 +14,23 @@ PIL.PILLOW_VERSION = PIL.__version__  # torchvision bug
 
 TOY_DATA_PATH = "data/toy/train-set"
 
-global counter
-counter = 0
-
 
 def normalize_pose(pose):
-    """Radians to [0, 1]"""
-    global counter
-    # print('before')
-    if not np.all(-np.pi <= pose) and np.all(pose <= np.pi):
-        print(pose, end="\n")
-        print(np.where(~(-np.pi <= pose)))
-        print(np.where(~(pose <= np.pi)))
-        counter += 1
-        print(counter)
-    pose = 0.5 + (pose / (2 * np.pi))
-    # print('after')
-    # print(pose)
-    # assert np.all(0 <= pose) and np.all(pose <= 1)
+    """Transform [-1, 1] to [0, 1]"""
+    print(pose)
+    print(np.where(pose < -1))
+    print(np.where(pose > 1))
+    assert np.all(pose >= -1) and np.all(pose <= 1)
+    pose = (pose + 1) / 2
+    assert np.all(pose >= 0) and np.all(pose <= 1)
     return pose
 
 
 def unnormalize_pose(pose):
-    """[0, 1] to radians"""
-    assert np.all(0 <= pose) and np.all(pose <= 1)
-    pose = (pose - 0.5) * (2 * np.pi)
-    assert np.all(-np.pi <= pose) and np.all(pose <= np.pi)
+    """Transform [0, 1] to [-1, 1]"""
+    assert np.all(pose >= 0) and np.all(pose <= 1)
+    pose = pose * 2 - 1
+    assert np.all(pose >= -1) and np.all(pose <= 1)
     return pose
 
 
@@ -103,6 +94,7 @@ class ToyDataset(Dataset):
 
     def _get_single_item(self, idx):
         pose = self.poses[idx]
+        # print(f"{idx=}")
         pose = normalize_pose(pose)
         pose = torch.tensor(pose).to(torch.float32)
         ret = {"pose": pose}
@@ -120,6 +112,7 @@ class ToyDataset(Dataset):
         return ret
 
     def _get_segment(self, idx):
+        print(f"{idx=}")
         images = []
         poses = []
         timestamps = []

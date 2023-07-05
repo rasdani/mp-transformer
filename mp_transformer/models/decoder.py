@@ -248,8 +248,9 @@ class MovementPrimitiveDecoder(pl.LightningModule):
         recons_sequence = self.masked_average(
             recons_subseqs, repeated_transfo, gaussian_masks
         )
-        print(f"{recons_sequence.max()=}")
-        print(f"{recons_sequence.min()=}")
+        if recons_sequence.min() < 0 or recons_sequence.max() > 1:
+            print(f"{recons_sequence.max()=}")
+            print(f"{recons_sequence.min()=}")
 
         return {
             "recons_sequence": recons_sequence,

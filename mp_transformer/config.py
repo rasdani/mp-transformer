@@ -1,6 +1,6 @@
 # might move this to a yaml or json
 CONFIG = {
-    "pose_dim": 3,
+    "pose_dim": 6,
     "num_attention_heads": 4,
     "num_transformer_layers": 4,
     # "latent_dim": 16,
@@ -34,17 +34,20 @@ CONFIG = {
     # "lr": 5e-4,
     "batch_size": 8,
     # "batch_size": 16,
-    "N_train": 200000,
-    "N_val": 40000,
+    # "N_train": 200000,
+    "N_train": 2,
+    # "N_val": 40000,
+    "N_val": 2,
     "sequence_length": 128,
     # "epochs": 250,
     # "epochs": 3000,
-    "epochs": 500,
+    # "epochs": 500,
     # "epochs": 100,
-    # "epochs": 1,
+    "epochs": 2,
     # "run_name": "fresh-Transformer",
     # "run_name": "smol-Transformer",
-    "run_name": "resume-Transformer",
+    # "run_name": "resume-Transformer",
+    "run_name": "test-Transformer",
 }
 
 # for hyperparameter tuning with wandb sweep

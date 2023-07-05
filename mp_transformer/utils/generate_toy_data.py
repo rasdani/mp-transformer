@@ -23,78 +23,9 @@ BONE_LENGTHS = [6.86943196, 7.83778524, 9.5505643]
 #     return bone_lengths, key_marker_width
 
 
-# def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
-#     """Uses gaussian processes of two speeds to animate different parts of the limb."""
-
-#     print(f"Drawing {N} samples, might take a while...")
-
-#     if train_or_val == "train":
-#         rbf = gaussian_process.kernels.RBF(length_scale=0.25)
-#         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.6)
-#     elif train_or_val == "val":
-#         rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
-#         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
-#     else:
-#         raise ValueError(f"{train_or_val} must be 'train' or 'val' in Gaussian Process.")
-
-#     GP = gaussian_process.GaussianProcessRegressor(kernel=rbf)
-#     GP_slow = gaussian_process.GaussianProcessRegressor(kernel=rbf_slow)
-
-#     t = np.linspace(0, 120, N)
-#     # TODO: hardcode if I end up using only 3 joints
-#     y = np.empty((N, len(bone_lengths)))
-
-#     y[:, 0] = 3 * GP_slow.sample_y(t[:, None], random_state=None)[:, 0]
-
-#     y_samples = 0.7 * GP.sample_y(t[:, None], n_samples=len(bone_lengths) - 1, random_state=None).T
-#     y[:, 1:] = np.column_stack(y_samples)
-
-#     print("RAW")
-#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
-
-#     # Wrap angles between -pi and pi
-#     y = (y + np.pi) % (2 * np.pi) - np.pi
-#     print("FIRT WRAP")
-#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
-
-#     # Unwrap handles the case where the angle jumps from -pi to pi
-#     y = np.unwrap(y, axis=0)
-#     print("UNWRAP")
-#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
-
-
-#     # Wrap again since unwrapping can lead to values outside of [-pi, pi]
-#     y = (y + np.pi) % (2 * np.pi) - np.pi
-#     print("SECOND WRAP")
-#     print(f"y.min() = {y.min()}, y.max() = {y.max()}")
-
-#     # Check for discontinuities
-#     y_diff = np.diff(y, axis=0)
-#     print("DIFF")
-#     print(y_diff)
-#     print(f"y_diff.min() = {y_diff.min()}, y_diff.max() = {y_diff.max()}")
-
-#     max_jump = np.pi
-#     indices_of_jumps = np.where(np.abs(y_diff) > max_jump)
-#     print(f"indices_of_jumps = {indices_of_jumps}")
-
-#     # if np.any(abs(y_diff) > max_jump):
-#     #     raise ValueError("Detected a discontinuity in the pose sequence.")
-
-#     window_size = 2  # Adjust as needed
-
-#     for idx in indices_of_jumps[0]:
-#         print(f"Jump at index {idx} in column {indices_of_jumps[1][0]}:")
-#         print(f"Values before: {y[idx-window_size:idx+1]}")
-#         print(f"Values after: {y[idx+1:idx+window_size+1]}")
-#         print(f"Difference causing the jump: {y_diff[idx]}")
-#         print("---")
-
-#     return y
-
-
 def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
-    """Uses gaussian processes of two speeds to animate different parts of the limb."""
+    """Uses gaussian processes of two speeds to animate different parts of the limb.
+    To avoid discontinuities angles are represented as sin and cos."""
 
     print(f"Drawing {N} samples, might take a while...")
 
@@ -156,46 +87,6 @@ def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
         print("---")
 
     return y
-
-
-# def forward(angles, bone_lenghts=BONE_LENGTHS):
-#     """forward
-#     Compute forward kinematics
-#     angles --> cartesian coordinates
-
-#     :param angles:
-#       List of angles for each bone_length in the hierarchy
-#       relative to its parent bone_length
-#     :param bone_lengths: List of bone_length lengths
-#     """
-#     bone_lengths = np.array(bone_lenghts)
-#     if bone_lengths is None:
-#         bone_lengths = np.ones_like(angles)
-#     elif len(bone_lengths) == 2:
-#         bone_lengths = bone_lengths * np.ones_like(angles)
-#     else:
-#         try:
-#             assert len(angles) == len(bone_lengths)
-#             # assert angles.shape == bone_lengths.shape
-#         except AssertionError as excp:
-#             raise Exception(
-#                 f"Number of angles and bone_lengths should be the same"
-#                 f" but: {len(angles)} is not {len(bone_lengths)}"
-#                 # f" but: {angles.shape} is not {bone_lengths.shape}"
-#             ) from excp
-
-#     coordinates = [(0, 0)]
-#     cumulative_angle = 0
-#     for angle, bone_length in zip(angles, bone_lengths):
-#         offs = coordinates[-1]
-#         cumulative_angle += angle
-#         coordinates += [
-#             (
-#                 bone_length * np.cos(cumulative_angle) + offs[0],
-#                 bone_length * np.sin(cumulative_angle) + offs[1],
-#             )
-#         ]
-#     return coordinates
 
 
 def forward(angles, bone_lengths=BONE_LENGTHS):

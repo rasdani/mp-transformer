@@ -141,6 +141,7 @@ class MovementPrimitiveEncoder(pl.LightningModule):
             torch.tensor: tensor of size BSxMxD of features with M the number of primitives
         """
 
+        # breakpoint()
         # Get the batch size from the input data
         batch_size = poses.shape[0]
 
