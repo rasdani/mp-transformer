@@ -235,10 +235,10 @@ if __name__ == "__main__":
     # N = 4000
     GEN_IMAGES = True  # Learning and reconstructing only poses at the moment
     # GEN_IMAGES = False  # Learning and reconstructing only poses at the moment
-    ITERATIONS = 1  # Run muliple times on smaller N and concatenate
+    # ITERATIONS = 1  # Run muliple times on smaller N and concatenate
     # ITERATIONS = 16
-    # ITERATIONS = 20
-    # TRAIN_OR_VAL = "both"
-    TRAIN_OR_VAL = "train"
+    ITERATIONS = 20
+    TRAIN_OR_VAL = "both"
+    #TRAIN_OR_VAL = "train"
     # TRAIN_OR_VAL = "val"
     main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES, N=N)

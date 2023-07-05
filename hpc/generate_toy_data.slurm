@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --partition=short
+#SBATCH --partition=normal
 #SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=32000
-#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=8000
+#SBATCH --cpus-per-task=16
 #SBATCH --gpus=0
 #SBATCH --out=generate_toy_data.out
 #SBATCH --mail-user=$EMAIL
