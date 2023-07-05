@@ -1,6 +1,6 @@
 # might move this to a yaml or json
 CONFIG = {
-    "pose_dim": 3,
+    "pose_dim": 6,
     "num_attention_heads": 4,
     "num_transformer_layers": 4,
     # "latent_dim": 8,
@@ -39,8 +39,10 @@ CONFIG = {
     # "lr": 5e-4,
     "batch_size": 8,
     # "batch_size": 16,
-    "N_train": 200000,
-    "N_val": 40000,
+    # "N_train": 200000,
+    "N_train": 2,
+    # "N_val": 40000,
+    "N_val": 2,
     "sequence_length": 128,
     #"epochs": 295,
     "epochs": 230,
