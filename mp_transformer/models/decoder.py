@@ -10,12 +10,13 @@ def apply_rigid_transformation(sequence, transformation):
     """A learned rigid transformation for translation/rotation invariance.
 
     Latent space should capture intrinsic movement not
-    orientation in space. With 2D toy limb simply adjust for root joint angle
+    orientation in space. With 2D toy limb, simply adjust for root joint angle
     to make the toy limb representation rotation agnostic.
     """
     ret = sequence.clone()
     ret[..., 0] += transformation.squeeze(-1)
     return ret
+    # return sequence
 
 
 class MovementPrimitiveDecoder(pl.LightningModule):
@@ -248,9 +249,9 @@ class MovementPrimitiveDecoder(pl.LightningModule):
         recons_sequence = self.masked_average(
             recons_subseqs, repeated_transfo, gaussian_masks
         )
-        if recons_sequence.min() < 0 or recons_sequence.max() > 1:
-            print(f"{recons_sequence.max()=}")
-            print(f"{recons_sequence.min()=}")
+        # if recons_sequence.min() < 0 or recons_sequence.max() > 1:
+        #     print(f"{recons_sequence.max()=}")
+        #     print(f"{recons_sequence.min()=}")
 
         return {
             "recons_sequence": recons_sequence,

@@ -23,7 +23,8 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         self.encoder = MovementPrimitiveEncoder(config)
         self.decoder = MovementPrimitiveDecoder(config)
 
-        self.num_primitives = self.encoder.num_primitives
+        self.pose_dim = config["pose_dim"]
+        self.num_primitives = config["num_primitives"]
         self.sequence_length = config["sequence_length"]
         self.kl_weight = config["kl_weight"]
         self.current_kl_weight = 0.0
@@ -260,7 +261,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def generate(self):
         """Generates a sequence of poses."""
-        random_poses = torch.rand((1, self.sequence_length, 3))
+        random_poses = torch.rand((1, self.sequence_length, self.pose_dim))
         timestamps = torch.linspace(0, 1, self.sequence_length).unsqueeze(0)
         random_out = self.encoder(random_poses, timestamps)
         mus, logvars = random_out["mus"], random_out["logvars"]

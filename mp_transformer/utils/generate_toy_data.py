@@ -105,8 +105,10 @@ def forward(angles, bone_lengths=BONE_LENGTHS):
 
     coordinates = [(0, 0)]
     cumulative_angle = 0
-    for angle_sin_cos, bone_length in zip(angles, bone_lengths):
-        angle_sin, angle_cos = angle_sin_cos
+    angles_sin = angles[::2]
+    angles_cos = angles[1::2]
+    # breakpoint()
+    for angle_sin, angle_cos, bone_length in zip(angles_sin, angles_cos, bone_lengths):
         angle = np.arctan2(angle_sin, angle_cos)
         offs = coordinates[-1]
         cumulative_angle += angle

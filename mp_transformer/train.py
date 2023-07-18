@@ -85,13 +85,12 @@ def main(config, no_log=False, debug=False, checkpoint_path=None):
         drop_last=True,
         num_workers=num_workers,
     )
-    # val_dataloader = DataLoader(
-    #     val_dataset,
-    #     batch_size=config["batch_size"],
-    #     drop_last=True,
-    #     num_workers=num_workers,
-    # )
-    val_dataloader = train_dataloader
+    val_dataloader = DataLoader(
+        val_dataset,
+        batch_size=config["batch_size"],
+        drop_last=True,
+        num_workers=num_workers,
+    )
     gpus = 1 if CUDA_AVAILABLE else 0
     if no_log or debug:
         if debug:

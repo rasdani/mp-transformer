@@ -9,6 +9,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from mp_transformer.utils.generate_toydata import forward
+
 PIL.PILLOW_VERSION = PIL.__version__  # torchvision bug
 
 
@@ -17,20 +19,22 @@ TOY_DATA_PATH = "data/toy/train-set"
 
 def normalize_pose(pose):
     """Transform [-1, 1] to [0, 1]"""
-    print(pose)
-    print(np.where(pose < -1))
-    print(np.where(pose > 1))
-    assert np.all(pose >= -1) and np.all(pose <= 1)
-    pose = (pose + 1) / 2
-    assert np.all(pose >= 0) and np.all(pose <= 1)
+    # print(pose)
+    # print(np.where(pose < -1))
+    # print(np.where(pose > 1))
+    # assert np.all(pose >= -1) and np.all(pose <= 1)
+    # pose = (pose + 1) / 2
+    # assert np.all(pose >= 0) and np.all(pose <= 1)
+    
+    pose = forward(pose)
     return pose
 
 
 def unnormalize_pose(pose):
     """Transform [0, 1] to [-1, 1]"""
-    assert np.all(pose >= 0) and np.all(pose <= 1)
-    pose = pose * 2 - 1
-    assert np.all(pose >= -1) and np.all(pose <= 1)
+    # assert np.all(pose >= 0) and np.all(pose <= 1)
+    # pose = pose * 2 - 1
+    # assert np.all(pose >= -1) and np.all(pose <= 1)
     return pose
 
 
@@ -64,6 +68,9 @@ class ToyDataset(Dataset):
             if f.endswith(".npy")
         ]
         self.num_pose_files = len(self.poses)
+        # calculate boundary indices of each source array in the concatenated array
+        self.boundary_indices = np.cumsum([0] + [len(pose) for pose in self.poses[:-1]])
+
         self.poses = np.concatenate(self.poses)  # concats dimensions if not list!
         self.poses = self.poses[:N:sparsity]
 
@@ -82,7 +89,7 @@ class ToyDataset(Dataset):
     def __len__(self):
         if self.return_segments:  # Adjust the length based on 'return_segments'
             return len(self.poses) // self.sequence_length
-
+            # return sum((boundary_idx // self.sequence_length for boundary_idx in self.boundary_indices))
         return len(self.poses)
 
     def __getitem__(self, idx):
@@ -112,7 +119,7 @@ class ToyDataset(Dataset):
         return ret
 
     def _get_segment(self, idx):
-        print(f"{idx=}")
+        # print(f"{idx=}")
         images = []
         poses = []
         timestamps = []
@@ -120,6 +127,13 @@ class ToyDataset(Dataset):
         # Compute the start and end indices of the segment
         start_idx = idx * self.sequence_length
         end_idx = start_idx + self.sequence_length
+
+        # adjust start index if a boundary fall within the segment
+        for boundary_idx in self.boundary_indices:
+            if start_idx < boundary_idx < end_idx:
+                start_idx = boundary_idx
+                end_idx = start_idx + self.sequence_length
+                break
 
         for i in range(start_idx, end_idx):
             item = self._get_single_item(i)
@@ -143,9 +157,8 @@ class ToyDataset(Dataset):
 
         # Check for sudden jumps in the values of the poses tensor
         diff = poses[1:] - poses[:-1]
-        max_jump = None
-        # print(f"{diff.abs()=} at {idx=}")
-        # if torch.any(torch.abs(diff) > max_jump):
-        #     pass
+        max_jump = 0.25
+        if torch.any(torch.abs(diff) > max_jump):
+            print(f"{diff.abs().max()=} at {idx=}")
 
         return ret

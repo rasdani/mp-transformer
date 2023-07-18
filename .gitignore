@@ -5,6 +5,8 @@ data/toy/train-set/*
 !data/toy/train-set/poses*.npy
 data/toy/val-set/*
 !data/toy/val-set/poses*.npy
+radians
+val-set-extra
 # hpc/*
 lightning_logs
 chechpoints
