@@ -58,6 +58,7 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             dec_out["cumsum_and_durations"],
             dec_out["recons_subseqs"],
         )
+        print(f"{recons_sequence=}")
         return {
             "recons_sequence": recons_sequence,
             "rigid_transformation": rigid_transformation,

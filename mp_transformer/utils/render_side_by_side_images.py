@@ -4,7 +4,6 @@ import numpy as np
 from moviepy.editor import VideoFileClip, clips_array
 from PIL import Image
 
-from mp_transformer.datasets.toy_dataset import unnormalize_pose
 from mp_transformer.utils.generate_toy_data import render_image
 
 
@@ -64,6 +63,8 @@ def render_side_by_side(gt_pose, pred_pose):
 
 
 def render_side_by_side_sequence(item, model, subseq_idx=None):
+    from mp_transformer.datasets.toy_dataset import unnormalize_pose  # noqa
+
     ys, timestamps = item["poses"], item["timestamps"]
     if subseq_idx is not None:
         out = model.infer_subsequence(
@@ -109,6 +110,8 @@ def render_side_by_side_completion(item, model, from_idx, to_idx=-1):
 
 
 def render_generation(model):
+    from mp_transformer.datasets.toy_dataset import unnormalize_pose  # noqa
+
     ys_hat = model.generate()
     ys_hat = ys_hat.squeeze(0).detach().numpy()  # Remove batch dimension
     imgs = []

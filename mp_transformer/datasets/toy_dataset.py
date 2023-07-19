@@ -9,7 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from mp_transformer.utils.generate_toydata import forward
+from mp_transformer.utils.generate_toy_data import forward
 
 PIL.PILLOW_VERSION = PIL.__version__  # torchvision bug
 
@@ -25,8 +25,14 @@ def normalize_pose(pose):
     # assert np.all(pose >= -1) and np.all(pose <= 1)
     # pose = (pose + 1) / 2
     # assert np.all(pose >= 0) and np.all(pose <= 1)
-    
+
+    # breakpoint()
     pose = forward(pose)
+    pose = np.array(pose[1:])  # remove root join
+    pose = pose.flatten()
+    pose = pose / 32
+    # print(f"{pose.max()=}")
+    # print(f"{pose.min()=}")
     return pose
 
 
@@ -35,6 +41,7 @@ def unnormalize_pose(pose):
     # assert np.all(pose >= 0) and np.all(pose <= 1)
     # pose = pose * 2 - 1
     # assert np.all(pose >= -1) and np.all(pose <= 1)
+    pose = pose * 32
     return pose
 
 
@@ -156,9 +163,9 @@ class ToyDataset(Dataset):
             ret["images"] = images
 
         # Check for sudden jumps in the values of the poses tensor
-        diff = poses[1:] - poses[:-1]
-        max_jump = 0.25
-        if torch.any(torch.abs(diff) > max_jump):
-            print(f"{diff.abs().max()=} at {idx=}")
+        # diff = poses[1:] - poses[:-1]
+        # max_jump = 0.25
+        # if torch.any(torch.abs(diff) > max_jump):
+        #     print(f"{diff.abs().max()=} at {idx=}")
 
         return ret

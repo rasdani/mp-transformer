@@ -149,7 +149,10 @@ def coordinates_to_image(coords, size=(64, 64), fwhm_joints=5, fwhm_limbs=2):
 
 
 def render_image(pose, bone_lengths=BONE_LENGTHS):
-    coordinates = forward(pose, bone_lengths)
+    # coordinates = forward(pose, bone_lengths)
+    # breakpoint()
+    coordinates = [(pose[i], pose[i + 1]) for i in range(0, len(pose), 2)]
+    coordinates = [(0, 0)] + coordinates
     img = coordinates_to_image(coordinates)
 
     # Apply a colormap (viridis) to the image
@@ -241,6 +244,6 @@ if __name__ == "__main__":
     # ITERATIONS = 16
     ITERATIONS = 20
     TRAIN_OR_VAL = "both"
-    #TRAIN_OR_VAL = "train"
+    # TRAIN_OR_VAL = "train"
     # TRAIN_OR_VAL = "val"
     main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES, N=N)

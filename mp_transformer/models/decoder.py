@@ -47,7 +47,7 @@ class MovementPrimitiveDecoder(pl.LightningModule):
             nn.ReLU(),
             nn.LayerNorm(self.hidden_dim),
             nn.Linear(self.hidden_dim, self.pose_dim),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
         # Learns intermediate features from positionally encoded latent primitives
