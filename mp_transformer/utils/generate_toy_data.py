@@ -241,6 +241,6 @@ if __name__ == "__main__":
     # ITERATIONS = 16
     ITERATIONS = 20
     TRAIN_OR_VAL = "both"
-    #TRAIN_OR_VAL = "train"
+    # TRAIN_OR_VAL = "train"
     # TRAIN_OR_VAL = "val"
     main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES, N=N)

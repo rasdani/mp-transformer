@@ -9,8 +9,6 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from mp_transformer.utils.generate_toydata import forward
-
 PIL.PILLOW_VERSION = PIL.__version__  # torchvision bug
 
 
@@ -22,18 +20,17 @@ def normalize_pose(pose):
     # print(pose)
     # print(np.where(pose < -1))
     # print(np.where(pose > 1))
-    # assert np.all(pose >= -1) and np.all(pose <= 1)
-    # pose = (pose + 1) / 2
-    # assert np.all(pose >= 0) and np.all(pose <= 1)
-    
-    pose = forward(pose)
+    assert np.all(pose >= -1) and np.all(pose <= 1)
+    pose = (pose + 1) / 2
+    assert np.all(pose >= 0) and np.all(pose <= 1)
+
     return pose
 
 
 def unnormalize_pose(pose):
     """Transform [0, 1] to [-1, 1]"""
     # assert np.all(pose >= 0) and np.all(pose <= 1)
-    # pose = pose * 2 - 1
+    pose = pose * 2 - 1
     # assert np.all(pose >= -1) and np.all(pose <= 1)
     return pose
 
