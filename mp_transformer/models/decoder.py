@@ -40,10 +40,13 @@ class MovementPrimitiveDecoder(pl.LightningModule):
         # Decodes latent primtives and timestamps into subsequences of poses
         self.decoder = nn.Sequential(
             # self.feat_time: time feature dimension
-            nn.Linear(self.latent_dim + 2 * self.feat_time, self.hidden_dim),
+            # nn.Linear(self.latent_dim + 2 * self.feat_time, self.hidden_dim),
+            nn.Linear(self.latent_dim + 2 * self.feat_time, self.hidden_dim // 2),
             nn.ReLU(),
-            nn.LayerNorm(self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            # nn.LayerNorm(self.hidden_dim),
+            # nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.LayerNorm(self.hidden_dim // 2),
+            nn.Linear(self.hidden_dim // 2, self.hidden_dim),
             nn.ReLU(),
             nn.LayerNorm(self.hidden_dim),
             nn.Linear(self.hidden_dim, self.pose_dim),

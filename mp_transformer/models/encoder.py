@@ -12,7 +12,8 @@ class PositionalEncodingLayer(pl.LightningModule):
 
     def __init__(self, config):
         super().__init__()
-        self.latent_dim = config["latent_dim"]
+        # self.latent_dim = config["latent_dim"]
+        self.latent_dim = config["hidden_dim"]
 
         # sinusoidal frequencies for positional encoding
         # linearly spaced 1D tensor ranging from 0 to self.latent_dim a size of self.latent_dim // 2
@@ -74,6 +75,7 @@ class MovementPrimitiveEncoder(pl.LightningModule):
         # self.save_hyperparameters(config) # PyTorch Lightning
 
         self.pose_dim = config["pose_dim"]
+        self.hidden_dim = config["hidden_dim"]
         self.num_primitives = config["num_primitives"]
         self.latent_dim = config["latent_dim"]
         self.num_attention_heads = config["num_attention_heads"]
@@ -82,12 +84,20 @@ class MovementPrimitiveEncoder(pl.LightningModule):
 
         self.positional_encoding = PositionalEncodingLayer(config)
 
+        # encoder_layer = nn.TransformerEncoderLayer(
+        #     d_model=self.latent_dim,
+        #     nhead=self.num_attention_heads,
+        # )
+        # decoder_layer = nn.TransformerDecoderLayer(
+        #     d_model=self.latent_dim,
+        #     nhead=self.num_attention_heads,
+        # )
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=self.latent_dim,
+            d_model=self.hidden_dim,
             nhead=self.num_attention_heads,
         )
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=self.latent_dim,
+            d_model=self.hidden_dim,
             nhead=self.num_attention_heads,
         )
         self.encoder_segments = torch.nn.TransformerEncoder(
@@ -97,23 +107,30 @@ class MovementPrimitiveEncoder(pl.LightningModule):
             decoder_layer=decoder_layer, num_layers=self.num_transformer_layers
         )
 
-        self.embedding = nn.Linear(self.pose_dim, self.latent_dim)
+        self.embedding = nn.Linear(self.pose_dim, self.hidden_dim)
 
         self.mean_encoder = nn.Sequential(
-            nn.Linear(self.latent_dim, self.latent_dim),
+            # nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim // 2),
             nn.ReLU(),
-            nn.Linear(self.latent_dim, self.latent_dim),
+            # nn.Linear(self.hidden_dim, self.latent_dim),
+            nn.Linear(self.hidden_dim // 2, self.latent_dim),
         )
         self.logvar_encoder = nn.Sequential(
-            nn.Linear(self.latent_dim, self.latent_dim),
+            # nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim // 2),
             nn.ReLU(),
-            nn.Linear(self.latent_dim, self.latent_dim),
+            # nn.Linear(self.hidden_dim, self.latent_dim),
+            nn.Linear(self.hidden_dim // 2, self.latent_dim),
         )
 
         # positional encoding used as input for the transformer decoder
         # TODO: keep or move?
+        # self.initial_encoding = self.get_positional_encoding(
+        #     self.num_primitives, self.latent_dim
+        # )
         self.initial_encoding = self.get_positional_encoding(
-            self.num_primitives, self.latent_dim
+            self.num_primitives, self.hidden_dim
         )
 
     # TODO: use PositionalEncodingLayer instead?

@@ -13,7 +13,7 @@ class TestTrain(unittest.TestCase):
         minimal_config = {
             "latent_dim": 4,
             "num_primitives": 2,
-            "hidden_dim": 2,
+            "hidden_dim": 4,
             "batch_size": 3,
             "sequence_length": 5,
             "N_train": 4,
