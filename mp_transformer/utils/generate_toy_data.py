@@ -32,7 +32,7 @@ def generate_gaussian_process_poses(N, bone_lengths, train_or_val):
     if train_or_val == "train":
         rbf = gaussian_process.kernels.RBF(length_scale=0.25)
         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.6)
-    elif train_or_val == "val":
+    elif train_or_val in ["val", "test"]:
         rbf = gaussian_process.kernels.RBF(length_scale=0.15)  # val-set
         rbf_slow = gaussian_process.kernels.RBF(length_scale=0.55)  # val-set
     else:
@@ -105,10 +105,12 @@ def forward(angles, bone_lengths=BONE_LENGTHS):
 
     coordinates = [(0, 0)]
     cumulative_angle = 0
-    angles_sin = angles[::2]
-    angles_cos = angles[1::2]
+    # angles_sin = angles[::2]
+    # angles_cos = angles[1::2]
     # breakpoint()
-    for angle_sin, angle_cos, bone_length in zip(angles_sin, angles_cos, bone_lengths):
+    # for angle_sin, angle_cos, bone_length in zip(angles_sin, angles_cos, bone_lengths):
+    for angle_sin_cos, bone_length in zip(angles, bone_lengths):
+        angle_sin, angle_cos = angle_sin_cos
         angle = np.arctan2(angle_sin, angle_cos)
         offs = coordinates[-1]
         cumulative_angle += angle
@@ -240,7 +242,8 @@ if __name__ == "__main__":
     # ITERATIONS = 1  # Run muliple times on smaller N and concatenate
     # ITERATIONS = 16
     ITERATIONS = 20
-    TRAIN_OR_VAL = "both"
+    # TRAIN_OR_VAL = "both"
     # TRAIN_OR_VAL = "train"
     # TRAIN_OR_VAL = "val"
+    TRAIN_OR_VAL = "test"
     main(iterations=ITERATIONS, train_or_val=TRAIN_OR_VAL, gen_images=GEN_IMAGES, N=N)
