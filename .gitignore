@@ -9,7 +9,7 @@ radians
 val-set-extra
 # hpc/*
 lightning_logs
-chechpoints
+checkpoints
 wandb
 artifacts
 mp-transformer

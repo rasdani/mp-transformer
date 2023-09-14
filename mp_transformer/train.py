@@ -17,7 +17,7 @@ from mp_transformer.utils import save_generation_video, save_side_by_side_strip
 CUDA_AVAILABLE = torch.cuda.is_available()
 
 
-def setup(config):
+def setup(config, test_set=False):
     """Setup model and datasets."""
     model = MovementPrimitiveTransformer(config)
     train_dataset = ToyDataset(
@@ -25,8 +25,9 @@ def setup(config):
         sequence_length=config["sequence_length"],
         N=config["N_train"],
     )
+    val_dataset_path = "data/toy/test-set/" if test_set else "data/toy/val-set/"
     val_dataset = ToyDataset(
-        path="data/toy/val-set/",
+        path=val_dataset_path,
         return_segments=True,
         sequence_length=config["sequence_length"],
         N=config["N_val"],

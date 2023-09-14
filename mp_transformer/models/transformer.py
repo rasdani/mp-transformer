@@ -233,11 +233,44 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             self.best_val_loss = loss
         return loss
 
+    def test_step(self, batch, _):
+        "Pytorch Lightning test step."
+        poses, timestamps = (
+            batch["poses"],
+            batch["timestamps"],
+        )
+        out = self.forward(poses, timestamps)
+        recons_sequence = out["recons_sequence"]
+        # Function to extract angles from sine-cosine pairs
+        def extract_angles_from_sin_cos(tensor):
+            sin_x1 = tensor[:, :, 0]
+            cos_x1 = tensor[:, :, 1]
+            sin_x2 = tensor[:, :, 2]
+            cos_x2 = tensor[:, :, 3]
+            sin_x3 = tensor[:, :, 4]
+            cos_x3 = tensor[:, :, 5]
+            x1 = torch.atan2(sin_x1, cos_x1)
+            x2 = torch.atan2(sin_x2, cos_x2)
+            x3 = torch.atan2(sin_x3, cos_x3)
+            return torch.stack([x1, x2, x3], dim=-1)
+
+        recons_sequence_angles = extract_angles_from_sin_cos(recons_sequence)
+        poses_angles = extract_angles_from_sin_cos(poses)
+        loss = self.val_loss(gt=poses_angles, recons_sequence=recons_sequence_angles)
+        return loss
+
     def on_train_end(self):
         """Callback by PyTorch Lightning."""
         # log directly to wandb because PyTorch Lightning complains
         if self.logger is not None:
             self.logger.experiment.log({"best_val_loss": self.best_val_loss})
+
+    def test_epoch_end(self, losses):
+        """Callback by PyTorch Lightning."""
+        print(f"{losses=}")
+        avg_loss = torch.stack(losses).mean()
+        self.log("avg_test_loss", avg_loss)
+
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)

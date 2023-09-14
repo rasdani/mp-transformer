@@ -1,8 +1,10 @@
 # might move this to a yaml or json
 CONFIG = {
     "pose_dim": 6,
-    "num_attention_heads": 4,
-    "num_transformer_layers": 4,
+    # "num_attention_heads": 4,
+    # "num_transformer_layers": 4,
+    "num_attention_heads": 1,
+    "num_transformer_layers": 1,
     # "num_transformer_layers": 2,
     # "latent_dim": 4,
     # "latent_dim": 6,
