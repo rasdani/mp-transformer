@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from mp_transformer.models import MovementPrimitiveDecoder, MovementPrimitiveEncoder
 from mp_transformer.models.decoder import apply_rigid_transformation
-
+from mp_transformer.utils.generate_toy_data import forward_kinematics
 
 class MovementPrimitiveTransformer(pl.LightningModule):
     """This Transformer architecture maps a sequence of poses i.e movement to a
@@ -254,8 +254,12 @@ class MovementPrimitiveTransformer(pl.LightningModule):
             x3 = torch.atan2(sin_x3, cos_x3)
             return torch.stack([x1, x2, x3], dim=-1)
 
-        recons_sequence_angles = extract_angles_from_sin_cos(recons_sequence)
-        poses_angles = extract_angles_from_sin_cos(poses)
+        # recons_sequence_angles = extract_angles_from_sin_cos(recons_sequence)
+        # poses_angles = extract_angles_from_sin_cos(poses)
+        # recons_sequence_angles = recons_sequence
+        # poses_angles = poses
+        recons_sequence_angles = forward_kinematics(recons_sequence)
+        poses_angles = forward_kinematics(poses)
         loss = self.val_loss(gt=poses_angles, recons_sequence=recons_sequence_angles)
         return loss
 

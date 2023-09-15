@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from natsort import natsorted
 from PIL import Image
 from sklearn import gaussian_process
+import torch
 
 BONE_LENGTHS = [6.86943196, 7.83778524, 9.5505643]
 
@@ -122,6 +123,35 @@ def forward(angles, bone_lengths=BONE_LENGTHS):
         ]
     return coordinates
 
+def forward_kinematics(angles, bone_lengths=BONE_LENGTHS):
+    """
+    Compute forward kinematics using PyTorch
+    angles --> cartesian coordinates
+
+    :param angles: Tensor of shape [batch_size, sequence_length, num_joints * 2]
+      Pairs of sine and cosine values for each bone_length in the hierarchy
+      relative to its parent bone_length
+    :param bone_lengths: List or tensor of bone_length lengths
+    """
+    bone_lengths = torch.tensor(bone_lengths, device=angles.device, dtype=angles.dtype)
+
+    batch_size, seq_length, _ = angles.shape
+    num_joints = len(bone_lengths)
+
+    coordinates = torch.zeros(batch_size, seq_length, num_joints+1, 2, device=angles.device)
+    cumulative_angle = torch.zeros(batch_size, seq_length, device=angles.device)
+
+    for i in range(num_joints):
+        angle_sin = angles[:, :, 2*i]
+        angle_cos = angles[:, :, 2*i + 1]
+        angle = torch.atan2(angle_sin, angle_cos)
+        cumulative_angle += angle
+
+        offsets = coordinates[:, :, i]
+        coordinates[:, :, i+1, 0] = bone_lengths[i] * torch.cos(cumulative_angle) + offsets[:, :, 0]
+        coordinates[:, :, i+1, 1] = bone_lengths[i] * torch.sin(cumulative_angle) + offsets[:, :, 1]
+
+    return coordinates
 
 def coordinates_to_image(coords, size=(64, 64), fwhm_joints=5, fwhm_limbs=2):
     h, w = size
