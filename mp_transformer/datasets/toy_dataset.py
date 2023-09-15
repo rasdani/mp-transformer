@@ -152,10 +152,4 @@ class ToyDataset(Dataset):
             images = torch.stack(images)
             ret["images"] = images
 
-        # Check for sudden jumps in the values of the poses tensor
-        diff = poses[1:] - poses[:-1]
-        max_jump = 0.25
-        if torch.any(torch.abs(diff) > max_jump):
-            print(f"{diff.abs().max()=} at {idx=}")
-
         return ret

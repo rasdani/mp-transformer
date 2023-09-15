@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from mp_transformer.models import MovementPrimitiveDecoder, MovementPrimitiveEncoder
 from mp_transformer.models.decoder import apply_rigid_transformation
-from mp_transformer.utils.generate_toy_data import forward_kinematics
+from mp_transformer.utils.generate_toy_data import forward_kinematics, convert_px_to_mm
 
 class MovementPrimitiveTransformer(pl.LightningModule):
     """This Transformer architecture maps a sequence of poses i.e movement to a
@@ -159,6 +159,12 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         """Validation loss is just global pose reconstruction loss."""
         return self.pose_loss(gt, recons_sequence)
 
+    def test_loss(self, gt, recons_sequence):
+        """MPJPE error metric."""
+        summed_pose_diffs = F.mse_loss(gt, recons_sequence, reduction='none').sum(-1)
+        return torch.sqrt(summed_pose_diffs).mean()
+
+
     def training_step(self, batch, _):
         "Pytorch Lightning training step."
         poses, timestamps = (
@@ -241,26 +247,12 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         )
         out = self.forward(poses, timestamps)
         recons_sequence = out["recons_sequence"]
-        # Function to extract angles from sine-cosine pairs
-        def extract_angles_from_sin_cos(tensor):
-            sin_x1 = tensor[:, :, 0]
-            cos_x1 = tensor[:, :, 1]
-            sin_x2 = tensor[:, :, 2]
-            cos_x2 = tensor[:, :, 3]
-            sin_x3 = tensor[:, :, 4]
-            cos_x3 = tensor[:, :, 5]
-            x1 = torch.atan2(sin_x1, cos_x1)
-            x2 = torch.atan2(sin_x2, cos_x2)
-            x3 = torch.atan2(sin_x3, cos_x3)
-            return torch.stack([x1, x2, x3], dim=-1)
 
-        # recons_sequence_angles = extract_angles_from_sin_cos(recons_sequence)
-        # poses_angles = extract_angles_from_sin_cos(poses)
-        # recons_sequence_angles = recons_sequence
-        # poses_angles = poses
-        recons_sequence_angles = forward_kinematics(recons_sequence)
-        poses_angles = forward_kinematics(poses)
-        loss = self.val_loss(gt=poses_angles, recons_sequence=recons_sequence_angles)
+        poses_cartesian = forward_kinematics(poses)
+        poses_cartesian = convert_px_to_mm(poses_cartesian)
+        recons_sequence_cartesian = forward_kinematics(recons_sequence)
+        recons_sequence_cartesian = convert_px_to_mm(recons_sequence_cartesian)
+        loss = self.test_loss(gt=poses_cartesian, recons_sequence=recons_sequence_cartesian)
         return loss
 
     def on_train_end(self):

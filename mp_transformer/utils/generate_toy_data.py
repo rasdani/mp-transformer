@@ -153,6 +153,24 @@ def forward_kinematics(angles, bone_lengths=BONE_LENGTHS):
 
     return coordinates
 
+def convert_px_to_mm(error_in_px, assumed_limb_length_mm=600, bone_lengths=BONE_LENGTHS):
+    """
+    Convert the error from pixels to millimeters based on an assumed real-world length of the limb.
+
+    Parameters:
+    - error_in_px: Error value in pixels.
+    - assumed_limb_length_mm: Assumed length of the toy limb in real-world millimeters.
+    - total_limb_length_px: Total length of the toy limb in pixels (sum of BONE_LENGTHS in your case).
+
+    Returns:
+    - error_in_mm: Error value converted to millimeters.
+    """
+    
+    total_limb_length_px = sum(bone_lengths)
+    conversion_factor = assumed_limb_length_mm / total_limb_length_px
+    error_in_mm = error_in_px * conversion_factor
+    return error_in_mm
+
 def coordinates_to_image(coords, size=(64, 64), fwhm_joints=5, fwhm_limbs=2):
     h, w = size
     img = np.zeros(size)
