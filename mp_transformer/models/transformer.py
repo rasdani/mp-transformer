@@ -5,7 +5,8 @@ import torch.nn.functional as F
 
 from mp_transformer.models import MovementPrimitiveDecoder, MovementPrimitiveEncoder
 from mp_transformer.models.decoder import apply_rigid_transformation
-from mp_transformer.utils.generate_toy_data import forward_kinematics, convert_px_to_mm
+from mp_transformer.utils.generate_toy_data import convert_px_to_mm, forward_kinematics
+
 
 class MovementPrimitiveTransformer(pl.LightningModule):
     """This Transformer architecture maps a sequence of poses i.e movement to a
@@ -161,9 +162,8 @@ class MovementPrimitiveTransformer(pl.LightningModule):
 
     def test_loss(self, gt, recons_sequence):
         """MPJPE error metric."""
-        summed_pose_diffs = F.mse_loss(gt, recons_sequence, reduction='none').sum(-1)
+        summed_pose_diffs = F.mse_loss(gt, recons_sequence, reduction="none").sum(-1)
         return torch.sqrt(summed_pose_diffs).mean()
-
 
     def training_step(self, batch, _):
         "Pytorch Lightning training step."
@@ -252,7 +252,9 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         poses_cartesian = convert_px_to_mm(poses_cartesian)
         recons_sequence_cartesian = forward_kinematics(recons_sequence)
         recons_sequence_cartesian = convert_px_to_mm(recons_sequence_cartesian)
-        loss = self.test_loss(gt=poses_cartesian, recons_sequence=recons_sequence_cartesian)
+        loss = self.test_loss(
+            gt=poses_cartesian, recons_sequence=recons_sequence_cartesian
+        )
         return loss
 
     def on_train_end(self):
@@ -266,7 +268,6 @@ class MovementPrimitiveTransformer(pl.LightningModule):
         print(f"{losses=}")
         avg_loss = torch.stack(losses).mean()
         self.log("avg_test_loss", avg_loss)
-
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)

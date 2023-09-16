@@ -4,11 +4,11 @@ from multiprocessing import Pool
 
 import imageio
 import numpy as np
+import torch
 from matplotlib import pyplot as plt
 from natsort import natsorted
 from PIL import Image
 from sklearn import gaussian_process
-import torch
 
 BONE_LENGTHS = [6.86943196, 7.83778524, 9.5505643]
 
@@ -110,7 +110,7 @@ def forward(angles, bone_lengths=BONE_LENGTHS):
     angles_cos = angles[1::2]
     # breakpoint()
     for angle_sin, angle_cos, bone_length in zip(angles_sin, angles_cos, bone_lengths):
-    # for angle_sin_cos, bone_length in zip(angles, bone_lengths):
+        # for angle_sin_cos, bone_length in zip(angles, bone_lengths):
         # angle_sin, angle_cos = angle_sin_cos
         angle = np.arctan2(angle_sin, angle_cos)
         offs = coordinates[-1]
@@ -122,6 +122,7 @@ def forward(angles, bone_lengths=BONE_LENGTHS):
             )
         ]
     return coordinates
+
 
 def forward_kinematics(angles, bone_lengths=BONE_LENGTHS):
     """
@@ -138,22 +139,31 @@ def forward_kinematics(angles, bone_lengths=BONE_LENGTHS):
     batch_size, seq_length, _ = angles.shape
     num_joints = len(bone_lengths)
 
-    coordinates = torch.zeros(batch_size, seq_length, num_joints+1, 2, device=angles.device)
+    coordinates = torch.zeros(
+        batch_size, seq_length, num_joints + 1, 2, device=angles.device
+    )
     cumulative_angle = torch.zeros(batch_size, seq_length, device=angles.device)
 
     for i in range(num_joints):
-        angle_sin = angles[:, :, 2*i]
-        angle_cos = angles[:, :, 2*i + 1]
+        angle_sin = angles[:, :, 2 * i]
+        angle_cos = angles[:, :, 2 * i + 1]
         angle = torch.atan2(angle_sin, angle_cos)
         cumulative_angle += angle
 
         offsets = coordinates[:, :, i]
-        coordinates[:, :, i+1, 0] = bone_lengths[i] * torch.cos(cumulative_angle) + offsets[:, :, 0]
-        coordinates[:, :, i+1, 1] = bone_lengths[i] * torch.sin(cumulative_angle) + offsets[:, :, 1]
+        coordinates[:, :, i + 1, 0] = (
+            bone_lengths[i] * torch.cos(cumulative_angle) + offsets[:, :, 0]
+        )
+        coordinates[:, :, i + 1, 1] = (
+            bone_lengths[i] * torch.sin(cumulative_angle) + offsets[:, :, 1]
+        )
 
     return coordinates
 
-def convert_px_to_mm(error_in_px, assumed_limb_length_mm=600, bone_lengths=BONE_LENGTHS):
+
+def convert_px_to_mm(
+    error_in_px, assumed_limb_length_mm=600, bone_lengths=BONE_LENGTHS
+):
     """
     Convert the error from pixels to millimeters based on an assumed real-world length of the limb.
 
@@ -165,11 +175,12 @@ def convert_px_to_mm(error_in_px, assumed_limb_length_mm=600, bone_lengths=BONE_
     Returns:
     - error_in_mm: Error value converted to millimeters.
     """
-    
+
     total_limb_length_px = sum(bone_lengths)
     conversion_factor = assumed_limb_length_mm / total_limb_length_px
     error_in_mm = error_in_px * conversion_factor
     return error_in_mm
+
 
 def coordinates_to_image(coords, size=(64, 64), fwhm_joints=5, fwhm_limbs=2):
     h, w = size
