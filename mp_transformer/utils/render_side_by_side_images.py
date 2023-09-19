@@ -172,7 +172,7 @@ def save_side_by_side_strip(item, model, num_subseqs=6, fps=20, from_idx=None, t
 
 def save_generation_video(
     model,
-    fps=20,
+    fps=20.0,
     path="tmp/gen_vid.mp4",
 ):
     imgs = render_generation(model)
