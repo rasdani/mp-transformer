@@ -147,7 +147,7 @@ def save_side_by_side_video(
     print(f"Video saved to {output_file}")
 
 
-def save_side_by_side_strip(item, model, num_subseqs, fps=20, from_idx=None, to_idx=-1):
+def save_side_by_side_strip(item, model, num_subseqs=6, fps=20, from_idx=None, to_idx=-1):
     # Whole sequence
     save_side_by_side_video(
         item, model, fps=fps, subseq_idx=None, from_idx=from_idx, to_idx=to_idx
@@ -182,3 +182,24 @@ def save_generation_video(
             writer.append_data(img_array)
 
     print(f"Video saved to {path}")
+
+def unroll_from_video(image_path, video_path, step=18):
+    # Read the video and extract every nth frame
+    clip = VideoFileClip(video_path)
+    frames = [frame for idx, frame in enumerate(clip.iter_frames()) if idx % step == 0]
+
+    # Convert frames to PIL Images
+    images = [Image.fromarray(frame) for frame in frames]
+
+    # Stitch images vertically
+    width = images[0].width
+    total_height = len(images) * images[0].height
+    stitched_image = Image.new("RGB", (width, total_height))
+
+    y_offset = 0
+    for img in images:
+        stitched_image.paste(img, (0, y_offset))
+        y_offset += img.height
+
+    stitched_image.save(image_path)
+    print("Image saved as unrolled_vertical_from_video.png")
