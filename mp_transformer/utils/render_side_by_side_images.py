@@ -202,4 +202,4 @@ def unroll_from_video(image_path, video_path, step=18):
         y_offset += img.height
 
     stitched_image.save(image_path)
-    print("Image saved as unrolled_vertical_from_video.png")
+    print(f"Image saved as {image_path}.png")
