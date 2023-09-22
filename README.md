@@ -27,4 +27,4 @@ Activate the environment with `mamba activate mp-transformer` and setup with `pi
 Activate the environment and run training without logging to Weights & Biases with `python mp_transformer/train.py --no-log`.
 
 ## Demo
-Example videos and Jupyter notebooks can be found in `demo/example.mp4`.
+Example videos and Jupyter notebooks can be found in `demo/`.
