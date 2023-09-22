@@ -147,7 +147,9 @@ def save_side_by_side_video(
     print(f"Video saved to {output_file}")
 
 
-def save_side_by_side_strip(item, model, num_subseqs=6, fps=20, from_idx=None, to_idx=-1):
+def save_side_by_side_strip(
+    item, model, num_subseqs=6, fps=20, from_idx=None, to_idx=-1
+):
     # Whole sequence
     save_side_by_side_video(
         item, model, fps=fps, subseq_idx=None, from_idx=from_idx, to_idx=to_idx
@@ -182,6 +184,7 @@ def save_generation_video(
             writer.append_data(img_array)
 
     print(f"Video saved to {path}")
+
 
 def unroll_from_video(image_path, video_path, step=18):
     # Read the video and extract every nth frame
